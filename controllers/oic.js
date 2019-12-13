@@ -78,7 +78,7 @@ module.exports = app => {
 
     schema.isValid(data).then(valid => {
       if (valid) {
-        res.status(201).send({ message: "creating a user" });
+        res.status(201).send({ message: "creating a transaction" });
       } else {
         console.log(schema);
         res.status(422).send({ message: "Schema validation fail" });
@@ -88,11 +88,17 @@ module.exports = app => {
 
   app.put("/transaction/:id", (req, res) => {
     const id = req.params.id;
-    res.status(200).send({ message: `update user ${id}` });
-  });
+    const data = req.body;
 
-  app.delete("/transaction/:id", (req, res) => {
-    const id = req.params.id;
-    res.status(422).send({ message: `delete user ${id}` });
+    schema.isValid(data).then(valid => {
+      if (valid) {
+        res.status(201).send({ message: "update a transaction" });
+      } else {
+        console.log(schema);
+        res.status(422).send({ message: "Schema validation fail" });
+      }
+    });
+
+    res.status(200).send({ message: `update transaction ${id}` });
   });
 };
