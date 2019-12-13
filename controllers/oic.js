@@ -80,7 +80,6 @@ module.exports = app => {
       if (valid) {
         res.status(201).send({ message: "creating a transaction" });
       } else {
-        console.log(schema);
         res.status(422).send({ message: "Schema validation fail" });
       }
     });
@@ -94,7 +93,6 @@ module.exports = app => {
       if (valid) {
         res.status(201).send({ message: "update a transaction" });
       } else {
-        console.log(schema);
         res.status(422).send({ message: "Schema validation fail" });
       }
     });
