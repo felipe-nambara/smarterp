@@ -1,6 +1,15 @@
 "use strict";
 
 const yup = require("yup");
+const config = require("config");
+const mysql = require("serverless-mysql")({
+  config: {
+    host: config.get("RDS_HOST"),
+    database: config.get("RDS_DBNAME"),
+    user: config.get("RDS_USER"),
+    password: config.get("RDS_PASSWORD")
+  }
+});
 
 module.exports = app => {
   const schema = yup.object().shape({
@@ -78,7 +87,25 @@ module.exports = app => {
 
     schema.isValid(data).then(valid => {
       if (valid) {
-        res.status(201).send({ message: "creating a transaction" });
+        const { header, invoice_customer, receivable, invoice } = data.otc;
+
+        mysql.connect().then(async conn => {
+          let results = await mysql
+            .transaction()
+            .query("SELECT * FROM invoice LIMIT 10")
+            .rollback(e => {
+              console.log(e);
+              res.status(422).send({ message: "business error:" + e });
+            })
+            .commit();
+
+          res
+            .status(201)
+            .send({
+              message: "created a transaction",
+              data: JSON.stringify(results)
+            });
+        });
       } else {
         res.status(422).send({ message: "Schema validation fail" });
       }
