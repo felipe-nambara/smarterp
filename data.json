@@ -1,0 +1,87 @@
+{
+  "otc": {
+    "header": {
+      "country": "Brazil",
+      "unity_identification": 1,
+      "origin_system": "smartsystem",
+      "operation": "person_plan",
+      "minifactu_id": 12345454,
+      "conciliator_id": 4554856,
+      "fin_id": 5548798,
+      "front_id": 55548745
+    },
+    "invoice_customer": {
+      "full_name": "Felipe Volcov Nambara",
+      "type_person": "natural_person",
+      "identification_financial_responsible": "39367233892",
+      "nationality_code": "BR",
+      "state": "SP",
+      "city": "São Paulo",
+      "adress": "Av. Paulista",
+      "adress_complement": null,
+      "district": "Bela Vista",
+      "postal_code": "01310100",
+      "area_code": "11",
+      "cellphone": "970718989",
+      "email": "felipe.nambara@bioritmo.com.br",
+      "state_registration": null,
+      "federal_registration": null,
+      "final_consumer": "yes",
+      "icms_contributor": "no"
+    },
+    "receivable": {
+      "is_smartfin": "no",
+      "transaction_type": "credit_card_recurring",
+      "contract_number": "1154845154",
+      "credit_card_brand": "MASTER",
+      "truncated_credit_card": "4548****5584",
+      "current_credit_card_installment": 1,
+      "total_credit_card_installment": 1,
+      "nsu": "4548452155",
+      "authorization_code": "884578745",
+      "price_list_value": 259.9,
+      "gross_value": 196.95,
+      "net_value": 195.95,
+      "interest_value": 1.0,
+      "administration_tax_percentage": 0.012,
+      "administration_tax_value": 2.3634,
+      "billing_date": "2019-12-06",
+      "credit_date": "2020-01-06",
+      "conciliator_filename": "concil_filename.txt",
+      "acquirer_bank_filename": "cielo_filename.txt",
+      "registration_gym_student": "1154845",
+      "fullname_gym_student": "João da Silva",
+      "identification_gym_student": "12345678912"
+    },
+    "invoice": {
+      "transaction_type": "invoice_to_financial_responsible",
+      "is_overdue_recovery": "no",
+      "invoice_items": [
+        {
+          "front_product_id": 123,
+          "front_plan_id": 321,
+          "front_addon_id": null,
+          "quantity": 1,
+          "list_price": 86.64,
+          "sale_price": 65.32
+        },
+        {
+          "front_product_id": 332,
+          "front_plan_id": 321,
+          "front_addon_id": null,
+          "quantity": 1,
+          "list_price": 86.64,
+          "sale_price": 65.32
+        },
+        {
+          "front_product_id": 445,
+          "front_plan_id": 321,
+          "front_addon_id": null,
+          "quantity": 1,
+          "list_price": 86.64,
+          "sale_price": 65.32
+        }
+      ]
+    }
+  }
+}
