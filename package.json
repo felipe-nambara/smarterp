@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon --exec \"serverless offline start --skipCacheInvalidation\"",
+    "start-dev": "npm run dev NODE_ENV=dev",
+    "dev": "nodemon --exec \"serverless offline start --stage dev --skipCacheInvalidation\"",
     "deploy": "serverless deploy -v",
     "remove": "serverless remove"
   },

@@ -13,68 +13,66 @@ const mysql = require("serverless-mysql")({
 
 module.exports = app => {
   const schema = yup.object().shape({
-    otc: yup.object({
-      header: yup.object({
-        country: yup.string().required(),
-        unity_identification: yup.number().required(),
-        origin_system: yup.string().required(),
-        operation: yup.string().required(),
-        minifactu_id: yup.number().required(),
-        conciliator_id: yup.number().required(),
-        fin_id: yup.number().required(),
-        front_id: yup.number().required()
-      }),
-      invoice_customer: yup.object({
-        full_name: yup.string().required(),
-        type_person: yup.string().required(),
-        identification_financial_responsible: yup.string().required(),
-        nationality_code: yup.string().required(),
-        state: yup.string().required(),
-        city: yup.string().required(),
-        adress: yup.string().required(),
-        /*adress_complement: yup.string(), */
-        district: yup.string().required(),
-        postal_code: yup.string().required(),
-        area_code: yup.string().required(),
-        cellphone: yup.string().required(),
-        email: yup
-          .string()
-          .email()
-          .required(),
-        /*state_registration: yup.string(),
+    header: yup.object({
+      country: yup.string().required(),
+      unity_identification: yup.number().required(),
+      origin_system: yup.string().required(),
+      operation: yup.string().required(),
+      minifactu_id: yup.number().required(),
+      conciliator_id: yup.number().required(),
+      fin_id: yup.number().required(),
+      front_id: yup.number().required()
+    }),
+    invoice_customer: yup.object({
+      full_name: yup.string().required(),
+      type_person: yup.string().required(),
+      identification_financial_responsible: yup.string().required(),
+      nationality_code: yup.string().required(),
+      state: yup.string().required(),
+      city: yup.string().required(),
+      adress: yup.string().required(),
+      /*adress_complement: yup.string(), */
+      district: yup.string().required(),
+      postal_code: yup.string().required(),
+      area_code: yup.string().required(),
+      cellphone: yup.string().required(),
+      email: yup
+        .string()
+        .email()
+        .required(),
+      /*state_registration: yup.string(),
           federal_registration: yup.string(),*/
-        final_consumer: yup.string().required(),
-        icms_contributor: yup.string().required()
-      }),
-      receivable: yup.object({
-        is_smartfin: yup.string().required(),
-        transaction_type: yup.string().required(),
-        contract_number: yup.string().required(),
-        credit_card_brand: yup.string().required(),
-        truncated_credit_card: yup.string().required(),
-        current_credit_card_installment: yup.number().required(),
-        total_credit_card_installment: yup.string().required(),
-        nsu: yup.string().required(),
-        authorization_code: yup.string().required(),
-        price_list_value: yup.string().required(),
-        gross_value: yup.string().required(),
-        net_value: yup.string().required(),
-        interest_value: yup.string().required(),
-        administration_tax_percentage: yup.string().required(),
-        administration_tax_value: yup.string().required(),
-        billing_date: yup.string().required(),
-        credit_date: yup.string().required(),
-        conciliator_filename: yup.string().required(),
-        acquirer_bank_filename: yup.string().required(),
-        registration_gym_student: yup.string().required(),
-        fullname_gym_student: yup.string().required(),
-        identification_gym_student: yup.string().required()
-      }),
-      invoice: yup.object({
-        transaction_type: yup.string().required(),
-        is_overdue_recovery: yup.string().required(),
-        invoice_items: yup.array()
-      })
+      final_consumer: yup.string().required(),
+      icms_contributor: yup.string().required()
+    }),
+    receivable: yup.object({
+      is_smartfin: yup.string().required(),
+      transaction_type: yup.string().required(),
+      contract_number: yup.string().required(),
+      credit_card_brand: yup.string().required(),
+      truncated_credit_card: yup.string().required(),
+      current_credit_card_installment: yup.number().required(),
+      total_credit_card_installment: yup.string().required(),
+      nsu: yup.string().required(),
+      authorization_code: yup.string().required(),
+      price_list_value: yup.string().required(),
+      gross_value: yup.string().required(),
+      net_value: yup.string().required(),
+      interest_value: yup.string().required(),
+      administration_tax_percentage: yup.string().required(),
+      administration_tax_value: yup.string().required(),
+      billing_date: yup.string().required(),
+      credit_date: yup.string().required(),
+      conciliator_filename: yup.string().required(),
+      acquirer_bank_filename: yup.string().required(),
+      registration_gym_student: yup.string().required(),
+      fullname_gym_student: yup.string().required(),
+      identification_gym_student: yup.string().required()
+    }),
+    invoice: yup.object({
+      transaction_type: yup.string().required(),
+      is_overdue_recovery: yup.string().required(),
+      invoice_items: yup.array()
     })
   });
 
@@ -85,32 +83,34 @@ module.exports = app => {
   app.post("/transaction", (req, res) => {
     const data = req.body;
 
-    schema.isValid(data).then(valid => {
-      if (valid) {
-        const { header, invoice_customer, receivable, invoice } = data.otc;
+    data.otc.forEach(otc => {
+      schema.isValid(otc).then(valid => {
+        if (valid) {
+          const { header, invoice_customer, receivable, invoice } = otc;
 
-        mysql.connect().then(async conn => {
-          let inserts = await mysql
-            .transaction()
-            .query(
-              "INSERT INTO order_to_cash(country,unity_identification,origin_system,operation,minifactu_id,conciliator_id,fin_id,front_id) VALUES (?,?,?,?,?,?,?,?)",
-              [
-                header.country,
-                header.unity_identification,
-                header.origin_system,
-                header.operation,
-                header.minifactu_id,
-                header.conciliator_id,
-                header.fin_id,
-                header.front_id
-              ]
-            )
-            .query(r => {
-              if (r.affectedRows > 0) {
+          mysql.connect().then(async conn => {
+            let order_to_cash_id = 0;
+            let inserts = await mysql
+              .transaction()
+              .query(
+                "INSERT INTO order_to_cash(country,unity_identification,origin_system,operation,minifactu_id,conciliator_id,fin_id,front_id) VALUES (?,?,?,?,?,?,?,?)",
+                [
+                  header.country,
+                  header.unity_identification,
+                  header.origin_system,
+                  header.operation,
+                  header.minifactu_id,
+                  header.conciliator_id,
+                  header.fin_id,
+                  header.front_id
+                ]
+              )
+              .query(r => {
+                this.order_to_cash_id = r.insertId;
                 [
                   "INSERT INTO receivable(order_to_cash_id,is_smartfin,transaction_type,contract_number,credit_card_brand,truncated_credit_card,current_credit_card_installment,total_credit_card_installment,nsu,authorization_code,price_list_value,gross_value,net_value,interest_value,administration_tax_percentage,administration_tax_value,billing_date,credit_date,conciliator_filename,acquirer_bank_filename,registration_gym_student,fullname_gym_student,identification_gym_student) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                   [
-                    r.insertId,
+                    this.order_to_cash_id,
                     receivable.is_smartfin,
                     receivable.transaction_type,
                     receivable.contract_number,
@@ -135,67 +135,54 @@ module.exports = app => {
                     receivable.identification_gym_student
                   ]
                 ];
-              } else {
-                console.log(r, "error");
-              }
-            })
-            .query(r => {
-              if (r.affectedRows > 0) {
+              })
+              .query(
+                "INSERT INTO invoice_customer(order_to_cash_id,full_name,type_person,identification_financial_responsible,nationality_code,state,city,adress,adress_complement,district,postal_code,area_code,cellphone,email,state_registration,federal_registration,final_consumer,icms_contributor) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);",
                 [
-                  "INSERT INTO invoice_customer(order_to_cash_id,full_name,type_person,identification_financial_responsible,nationality_code,state,city,adress,adress_complement,district,postal_code,area_code,cellphone,email,state_registration,federal_registration,final_consumer,icms_contributor) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);",
-                  [
-                    r.insertId,
-                    invoice_customer.full_name,
-                    invoice_customer.type_person,
-                    invoice_customer.identification_financial_responsible,
-                    invoice_customer.nationality_code,
-                    invoice_customer.state,
-                    invoice_customer.city,
-                    invoice_customer.adress,
-                    invoice_customer.adress_complement,
-                    invoice_customer.district,
-                    invoice_customer.postal_code,
-                    invoice_customer.area_code,
-                    invoice_customer.cellphone,
-                    invoice_customer.email,
-                    invoice_customer.state_registration,
-                    invoice_customer.federal_registration,
-                    invoice_customer.final_consumer,
-                    invoice_customer.icms_contributor
-                  ]
-                ];
-              } else {
-                console.log(r, "error");
-              }
-            })
-            .query(r => {
-              if (r.affectedRows > 0) {
+                  this.order_to_cash_id,
+                  invoice_customer.full_name,
+                  invoice_customer.type_person,
+                  invoice_customer.identification_financial_responsible,
+                  invoice_customer.nationality_code,
+                  invoice_customer.state,
+                  invoice_customer.city,
+                  invoice_customer.adress,
+                  invoice_customer.adress_complement,
+                  invoice_customer.district,
+                  invoice_customer.postal_code,
+                  invoice_customer.area_code,
+                  invoice_customer.cellphone,
+                  invoice_customer.email,
+                  invoice_customer.state_registration,
+                  invoice_customer.federal_registration,
+                  invoice_customer.final_consumer,
+                  invoice_customer.icms_contributor
+                ]
+              )
+              .query(
+                "INSERT INTO invoice(order_to_cash_id,transaction_type,is_overdue_recovery) VALUES (?,?,?);",
                 [
-                  "INSERT INTO invoice(order_to_cash_id,transaction_type,is_overdue_recovery) VALUES (?,?,?);",
-                  [
-                    r.insertId,
-                    invoice.transaction_type,
-                    invoice.is_overdue_recovery
-                  ]
-                ];
-              } else {
-                console.log(r, "error");
-              }
-            })
-            .rollback(e => {
-              console.log(e);
-              res.status(422).send({ message: "[422] Business error: " + e });
-            })
-            .commit();
+                  this.order_to_cash_id,
+                  invoice.transaction_type,
+                  invoice.is_overdue_recovery
+                ]
+              )
+              .rollback(e => {
+                console.log(e);
+                res.status(422).send({ message: "[422] Business error: " + e });
+              })
+              .commit();
 
-          res.status(201).send({
-            message: "created a transaction",
-            data: data
+            res.status(201).send({
+              message: "created a transaction",
+              data: data.otc,
+              transactions: data.otc.length
+            });
           });
-        });
-      } else {
-        res.status(422).send({ message: "Schema validation fail" });
-      }
+        } else {
+          res.status(422).send({ message: "Schema validation fail" });
+        }
+      });
     });
   });
 

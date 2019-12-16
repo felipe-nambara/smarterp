@@ -2,8 +2,8 @@
   "SECRET": "DOUTOREQUEMTEMDOUTORADO",
   "VERSION": "1.0.0",
   "ENV": "Production",
-  "RDS_HOST": "database-1.cifoxdyx2xhz.us-east-1.rds.amazonaws.com",
+  "RDS_HOST": "oic-db.cluster-cgzshounia8v.us-east-1.rds.amazonaws.com",
   "RDS_USER": "admin",
-  "RDS_PASSWORD": "master123",
+  "RDS_PASSWORD": "ikKpGanUOZcus6ASe7ew",
   "RDS_DBNAME": "oic_db"
 }
