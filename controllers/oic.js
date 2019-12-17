@@ -89,7 +89,7 @@ module.exports = app => {
           const { header, invoice_customer, receivable, invoice } = otc;
 
           mysql.connect().then(async conn => {
-            let order_to_cash_id = 0;
+            global.order_to_cash = 0;
             let inserts = await mysql
               .transaction()
               .query(
@@ -106,11 +106,11 @@ module.exports = app => {
                 ]
               )
               .query(r => {
-                this.order_to_cash_id = r.insertId;
+                global.order_to_cash_id = r.insertId;
                 [
                   "INSERT INTO receivable(order_to_cash_id,is_smartfin,transaction_type,contract_number,credit_card_brand,truncated_credit_card,current_credit_card_installment,total_credit_card_installment,nsu,authorization_code,price_list_value,gross_value,net_value,interest_value,administration_tax_percentage,administration_tax_value,billing_date,credit_date,conciliator_filename,acquirer_bank_filename,registration_gym_student,fullname_gym_student,identification_gym_student) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                   [
-                    this.order_to_cash_id,
+                    global.order_to_cash_id,
                     receivable.is_smartfin,
                     receivable.transaction_type,
                     receivable.contract_number,
@@ -139,7 +139,7 @@ module.exports = app => {
               .query(
                 "INSERT INTO invoice_customer(order_to_cash_id,full_name,type_person,identification_financial_responsible,nationality_code,state,city,adress,adress_complement,district,postal_code,area_code,cellphone,email,state_registration,federal_registration,final_consumer,icms_contributor) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);",
                 [
-                  this.order_to_cash_id,
+                  global.order_to_cash_id,
                   invoice_customer.full_name,
                   invoice_customer.type_person,
                   invoice_customer.identification_financial_responsible,
@@ -162,7 +162,7 @@ module.exports = app => {
               .query(
                 "INSERT INTO invoice(order_to_cash_id,transaction_type,is_overdue_recovery) VALUES (?,?,?);",
                 [
-                  this.order_to_cash_id,
+                  global.order_to_cash_id,
                   invoice.transaction_type,
                   invoice.is_overdue_recovery
                 ]
