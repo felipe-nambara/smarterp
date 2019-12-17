@@ -106,11 +106,11 @@ module.exports = app => {
                 ]
               )
               .query(r => {
-                global.order_to_cash_id = r.insertId;
+                r.order_to_cash_id = r.insertId;
                 [
                   "INSERT INTO receivable(order_to_cash_id,is_smartfin,transaction_type,contract_number,credit_card_brand,truncated_credit_card,current_credit_card_installment,total_credit_card_installment,nsu,authorization_code,price_list_value,gross_value,net_value,interest_value,administration_tax_percentage,administration_tax_value,billing_date,credit_date,conciliator_filename,acquirer_bank_filename,registration_gym_student,fullname_gym_student,identification_gym_student) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                   [
-                    global.order_to_cash_id,
+                    r.order_to_cash_id,
                     receivable.is_smartfin,
                     receivable.transaction_type,
                     receivable.contract_number,
@@ -136,37 +136,37 @@ module.exports = app => {
                   ]
                 ];
               })
-              .query(
+              .query(r => {
                 "INSERT INTO invoice_customer(order_to_cash_id,full_name,type_person,identification_financial_responsible,nationality_code,state,city,adress,adress_complement,district,postal_code,area_code,cellphone,email,state_registration,federal_registration,final_consumer,icms_contributor) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);",
-                [
-                  global.order_to_cash_id,
-                  invoice_customer.full_name,
-                  invoice_customer.type_person,
-                  invoice_customer.identification_financial_responsible,
-                  invoice_customer.nationality_code,
-                  invoice_customer.state,
-                  invoice_customer.city,
-                  invoice_customer.adress,
-                  invoice_customer.adress_complement,
-                  invoice_customer.district,
-                  invoice_customer.postal_code,
-                  invoice_customer.area_code,
-                  invoice_customer.cellphone,
-                  invoice_customer.email,
-                  invoice_customer.state_registration,
-                  invoice_customer.federal_registration,
-                  invoice_customer.final_consumer,
-                  invoice_customer.icms_contributor
-                ]
-              )
-              .query(
+                  [
+                    r.order_to_cash_id,
+                    invoice_customer.full_name,
+                    invoice_customer.type_person,
+                    invoice_customer.identification_financial_responsible,
+                    invoice_customer.nationality_code,
+                    invoice_customer.state,
+                    invoice_customer.city,
+                    invoice_customer.adress,
+                    invoice_customer.adress_complement,
+                    invoice_customer.district,
+                    invoice_customer.postal_code,
+                    invoice_customer.area_code,
+                    invoice_customer.cellphone,
+                    invoice_customer.email,
+                    invoice_customer.state_registration,
+                    invoice_customer.federal_registration,
+                    invoice_customer.final_consumer,
+                    invoice_customer.icms_contributor
+                  ];
+              })
+              .query(r => {
                 "INSERT INTO invoice(order_to_cash_id,transaction_type,is_overdue_recovery) VALUES (?,?,?);",
-                [
-                  global.order_to_cash_id,
-                  invoice.transaction_type,
-                  invoice.is_overdue_recovery
-                ]
-              )
+                  [
+                    r.order_to_cash_id,
+                    invoice.transaction_type,
+                    invoice.is_overdue_recovery
+                  ];
+              })
               .rollback(e => {
                 console.log(e);
                 res.status(422).send({ message: "[422] Business error: " + e });
