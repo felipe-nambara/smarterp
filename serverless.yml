@@ -7,6 +7,16 @@ provider:
   region: us-east-1
   timeout: 30
   memorySize: 512
+  versionFunctions: false
+  vpc:
+    securityGroupIds:
+      - sg-34311250
+      - sg-265dc142
+    subnetIds:
+      - subnet-9ef492e9
+      - subnet-65eb444e
+  environment:
+    NODE_ENV: dev
   package:
     excludeDevDependencies: true
     exclude:

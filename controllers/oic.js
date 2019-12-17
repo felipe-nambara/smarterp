@@ -83,13 +83,16 @@ module.exports = app => {
   app.post("/transaction", (req, res) => {
     const data = req.body;
 
-    data.otc.forEach(otc => {
-      schema.isValid(otc).then(valid => {
-        if (valid) {
-          const { header, invoice_customer, receivable, invoice } = otc;
+    function otcProcess(callback) {
+      data.otc.forEach(otc => {
+        schema.isValid(otc).then(async valid => {
+          let returned = {};
+          returned.success = [];
+          returned.error = [];
 
-          mysql.connect().then(async conn => {
-            global.order_to_cash = 0;
+          if (valid) {
+            const { header, invoice_customer, receivable, invoice } = otc;
+
             let inserts = await mysql
               .transaction()
               .query(
@@ -168,21 +171,41 @@ module.exports = app => {
                   ];
               })
               .rollback(e => {
-                console.log(e);
-                res.status(422).send({ message: "[422] Business error: " + e });
+                status = 422;
+                message = "[422] Business error: " + e;
+                console.log(`[${status}] - ${message}`);
+                returned.error.push({
+                  message: `[${status}] - ${message}`
+                });
               })
               .commit();
 
-            res.status(201).send({
-              message: "created a transaction",
-              data: data.otc,
-              transactions: data.otc.length
+            returned.success.push({ message: "created transaction" });
+          } else {
+            status = 422;
+            message = "Schema validation fail";
+            console.log(`[${this.status}] - ${this.message}`);
+            returned.error.push({
+              message: `[${this.status}] - ${this.message}`
             });
-          });
-        } else {
-          res.status(422).send({ message: "Schema validation fail" });
-        }
+          }
+          callback(returned);
+        });
       });
+    }
+
+    otcProcess(dataReturned => {
+      let dataReceived = [];
+      dataReceived.push(dataReturned);
+
+      if (dataReceived.length > 0) {
+        res.status(201).send({
+          message: "created transactions",
+          data: data.otc,
+          transactions: data.otc.length,
+          error: dataReturned.error.length
+        });
+      }
     });
   });
 
