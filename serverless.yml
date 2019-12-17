@@ -16,7 +16,7 @@ provider:
       - subnet-9ef492e9
       - subnet-65eb444e
   environment:
-    NODE_ENV: dev
+    APPLICATION_NAME: ms-smartfit
   package:
     excludeDevDependencies: true
     exclude:
