@@ -1,7 +1,6 @@
 {
-  "SECRET": "DOUTOREQUEMTEMDOUTORADO",
   "VERSION": "1.0.0",
-  "ENV": "Production",
+  "ENV": "production",
   "RDS_HOST": "oic-db.cluster-cgzshounia8v.us-east-1.rds.amazonaws.com",
   "RDS_USER": "admin",
   "RDS_PASSWORD": "ikKpGanUOZcus6ASe7ew",
