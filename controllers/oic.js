@@ -27,8 +27,8 @@ module.exports = app => {
         origin_system: yup.string().required(),
         operation: yup.string().required(),
         minifactu_id: yup.number().required(),
-        conciliator_id: yup.number().required(),
-        fin_id: yup.number().required(),
+        conciliator_id: yup.string().required(),
+        fin_id: yup.string().required(),
         front_id: yup.number().required()
       }),
       invoice_customer: yup.object({
@@ -80,7 +80,9 @@ module.exports = app => {
       invoice: yup.object({
         transaction_type: yup.string().required(),
         is_overdue_recovery: yup.string().required(),
-        invoice_items: yup.array()
+        invoice_items: yup.object({
+          invoice_items: yup.array()
+        })
       })
     })
     
@@ -218,11 +220,11 @@ module.exports = app => {
         let status = 422;
         let message = "Schema validation fail";
         console.log(`[${status}] - ${message}`);
+        returned.error.push({
+          message: `[${status}] - ${message}`,
+        });
         schema.validate(otc).catch((err) => {
-          returned.error.push({
-            message: `[${status}] - ${message}`,
-            error: err
-          });
+          console.log(err);
         });
       }
     }

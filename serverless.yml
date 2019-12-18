@@ -1,3 +1,4 @@
+org: bonax
 service: ms-smartfit
 
 provider:
@@ -24,7 +25,8 @@ provider:
       - .vscode/**
 
 functions:
-  app:
+  app: 
+    name: ms-smartfit
     handler: handler.run
     events:
       - http:
