@@ -5,8 +5,10 @@
   "main": "index.js",
   "scripts": {
     "dev": "export NODE_ENV=dev && nodemon --exec \"serverless offline start --showDuration --skipCacheInvalidation\"",
-    "deploy": "serverless deploy -v",
-    "remove": "serverless remove"
+    "deploy-prod": "serverless deploy -v --aws-profile default",
+    "deploy-dev": "serverless deploy -v --aws-profile smartfit-dev",
+    "remove-dev": "serverless remove --aws-profile smartfit-dev",
+    "logs": "serverless logs -f app"
   },
   "author": "",
   "license": "ISC",
