@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "export NODE_ENV=dev && nodemon --exec \"serverless offline start --showDuration --skipCacheInvalidation\"",
-    "deploy-prod": "serverless deploy -v --aws-profile default",
+    "deploy-prod": "serverless deploy -v --aws-profile smartfit-prod",
     "deploy-dev": "serverless deploy -v --aws-profile smartfit-dev",
     "remove-dev": "serverless remove --aws-profile smartfit-dev",
     "logs": "serverless logs -f app"
