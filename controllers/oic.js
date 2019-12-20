@@ -103,119 +103,125 @@ module.exports = app => {
 
       if (schema.isValidSync(otc)) {
           const { header, invoice_customer, receivable, invoice } = otc.otc;
-          let order_to_cash_id = 0;
-          let inserts = await mysql
-            .transaction()
-            .query(
-              "INSERT INTO order_to_cash(country,unity_identification,origin_system,operation,minifactu_id,conciliator_id,fin_id,front_id) VALUES (?,?,?,?,?,?,?,?)",
-              [
-                header.country,
-                header.unity_identification,
-                header.origin_system,
-                header.operation,
-                header.minifactu_id,
-                header.conciliator_id,
-                header.fin_id,
-                header.front_id
-              ]
-            )
-            .query((r) => {
-              global.order_to_cash_id = r.insertId;
-              return [
-                "INSERT INTO receivable(order_to_cash_id,is_smartfin,transaction_type,contract_number,credit_card_brand,truncated_credit_card,current_credit_card_installment,total_credit_card_installment,nsu,authorization_code,price_list_value,gross_value,net_value,interest_value,administration_tax_percentage,administration_tax_value,billing_date,credit_date,conciliator_filename,acquirer_bank_filename,registration_gym_student,fullname_gym_student,identification_gym_student) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                [
-                  global.order_to_cash_id,
-                  receivable.is_smartfin,
-                  receivable.transaction_type,
-                  receivable.contract_number,
-                  receivable.credit_card_brand,
-                  receivable.truncated_credit_card,
-                  receivable.current_credit_card_installment,
-                  receivable.total_credit_card_installment,
-                  receivable.nsu,
-                  receivable.authorization_code,
-                  receivable.price_list_value,
-                  receivable.gross_value,
-                  receivable.net_value,
-                  receivable.interest_value,
-                  receivable.administration_tax_percentage,
-                  receivable.administration_tax_value,
-                  receivable.billing_date,
-                  receivable.credit_date,
-                  receivable.conciliator_filename,
-                  receivable.acquirer_bank_filename,
-                  receivable.registration_gym_student,
-                  receivable.fullname_gym_student,
-                  receivable.identification_gym_student
-                ]
-              ];
-            })
-            .query((r) => {
-              return [
-              "INSERT INTO invoice_customer(order_to_cash_id,full_name,type_person,identification_financial_responsible,nationality_code,state,city,adress,adress_complement,district,postal_code,area_code,cellphone,email,state_registration,federal_registration,final_consumer,icms_contributor) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);",
-                [
-                  global.order_to_cash_id,
-                  invoice_customer.full_name,
-                  invoice_customer.type_person,
-                  invoice_customer.identification_financial_responsible,
-                  invoice_customer.nationality_code,
-                  invoice_customer.state,
-                  invoice_customer.city,
-                  invoice_customer.adress,
-                  invoice_customer.adress_complement,
-                  invoice_customer.district,
-                  invoice_customer.postal_code,
-                  invoice_customer.area_code,
-                  invoice_customer.cellphone,
-                  invoice_customer.email,
-                  invoice_customer.state_registration,
-                  invoice_customer.federal_registration,
-                  invoice_customer.final_consumer,
-                  invoice_customer.icms_contributor
-                ]
-              ]
-            })
-            .query((r) => {
-              return [
-              "INSERT INTO invoice(order_to_cash_id,transaction_type,is_overdue_recovery) VALUES (?,?,?);",
-                [
-                  global.order_to_cash_id,
-                  invoice.transaction_type,
-                  invoice.is_overdue_recovery
-                ]
-              ]
-            })
-            .query((r) => {
-              for (let indexit = 0; indexit < invoice.invoice_items.length; indexit++) {
-                const it = invoice.invoice_items[indexit];
-                
-                return [
-                  "INSERT INTO invoice_items(id_invoice,front_product_id,front_plan_id,front_addon_id,quantity,list_price,sale_price) VALUES (?,?,?,?,?,?,?);",
-                    [
-                      r.insertId,
-                      it.front_product_id,
-                      it.front_plan_id,
-                      it.front_addon_id,
-                      it.quantity,
-                      it.list_price,
-                      it.sale_price
-                    ]
-                  ]
-              }
-            })
-            .rollback(e => {
-              let status = 422;
-              let message = "Business error: " + e;
-              console.log(`[${status}] - ${message}`);
-              returned.error.push({
-                message: `[${status}] - ${message}`,
-                order_to_cash_id: global.order_to_cash_id,
-                transaction: otc
-              });
-            })
-            .commit();
 
-          returned.success.push({ message: "created transaction", data: otc, order_to_cash_id: global.order_to_cash_id });
+          if (!header.minifactu_id || header.minifactu_id == "") {
+            var message = "Missing node otc.header.minifactu_id at Json request !";
+            var return_code = 1,
+          } else {
+            let order_to_cash_id = 0;
+            let inserts = await mysql
+              .transaction()
+              .query(
+                "INSERT INTO order_to_cash(country,unity_identification,origin_system,operation,minifactu_id,conciliator_id,fin_id,front_id) VALUES (?,?,?,?,?,?,?,?)",
+                [
+                  header.country,
+                  header.unity_identification,
+                  header.origin_system,
+                  header.operation,
+                  header.minifactu_id,
+                  header.conciliator_id,
+                  header.fin_id,
+                  header.front_id
+                ]
+              )
+              .query((r) => {
+                global.order_to_cash_id = r.insertId;
+                return [
+                  "INSERT INTO receivable(order_to_cash_id,is_smartfin,transaction_type,contract_number,credit_card_brand,truncated_credit_card,current_credit_card_installment,total_credit_card_installment,nsu,authorization_code,price_list_value,gross_value,net_value,interest_value,administration_tax_percentage,administration_tax_value,billing_date,credit_date,conciliator_filename,acquirer_bank_filename,registration_gym_student,fullname_gym_student,identification_gym_student) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                  [
+                    global.order_to_cash_id,
+                    receivable.is_smartfin,
+                    receivable.transaction_type,
+                    receivable.contract_number,
+                    receivable.credit_card_brand,
+                    receivable.truncated_credit_card,
+                    receivable.current_credit_card_installment,
+                    receivable.total_credit_card_installment,
+                    receivable.nsu,
+                    receivable.authorization_code,
+                    receivable.price_list_value,
+                    receivable.gross_value,
+                    receivable.net_value,
+                    receivable.interest_value,
+                    receivable.administration_tax_percentage,
+                    receivable.administration_tax_value,
+                    receivable.billing_date,
+                    receivable.credit_date,
+                    receivable.conciliator_filename,
+                    receivable.acquirer_bank_filename,
+                    receivable.registration_gym_student,
+                    receivable.fullname_gym_student,
+                    receivable.identification_gym_student
+                  ]
+                ];
+              })
+              .query((r) => {
+                return [
+                "INSERT INTO invoice_customer(order_to_cash_id,full_name,type_person,identification_financial_responsible,nationality_code,state,city,adress,adress_complement,district,postal_code,area_code,cellphone,email,state_registration,federal_registration,final_consumer,icms_contributor) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);",
+                  [
+                    global.order_to_cash_id,
+                    invoice_customer.full_name,
+                    invoice_customer.type_person,
+                    invoice_customer.identification_financial_responsible,
+                    invoice_customer.nationality_code,
+                    invoice_customer.state,
+                    invoice_customer.city,
+                    invoice_customer.adress,
+                    invoice_customer.adress_complement,
+                    invoice_customer.district,
+                    invoice_customer.postal_code,
+                    invoice_customer.area_code,
+                    invoice_customer.cellphone,
+                    invoice_customer.email,
+                    invoice_customer.state_registration,
+                    invoice_customer.federal_registration,
+                    invoice_customer.final_consumer,
+                    invoice_customer.icms_contributor
+                  ]
+                ]
+              })
+              .query((r) => {
+                return [
+                "INSERT INTO invoice(order_to_cash_id,transaction_type,is_overdue_recovery) VALUES (?,?,?);",
+                  [
+                    global.order_to_cash_id,
+                    invoice.transaction_type,
+                    invoice.is_overdue_recovery
+                  ]
+                ]
+              })
+              .query((r) => {
+                for (let indexit = 0; indexit < invoice.invoice_items.length; indexit++) {
+                  const it = invoice.invoice_items[indexit];
+                  
+                  return [
+                    "INSERT INTO invoice_items(id_invoice,front_product_id,front_plan_id,front_addon_id,quantity,list_price,sale_price) VALUES (?,?,?,?,?,?,?);",
+                      [
+                        r.insertId,
+                        it.front_product_id,
+                        it.front_plan_id,
+                        it.front_addon_id,
+                        it.quantity,
+                        it.list_price,
+                        it.sale_price
+                      ]
+                    ]
+                }
+              })
+              .rollback(e => {
+                let status = 422;
+                let message = "Business error: " + e;
+                console.log(`[${status}] - ${message}`);
+                returned.error.push({
+                  message: `[${status}] - ${message}`,
+                  order_to_cash_id: global.order_to_cash_id,
+                  transaction: otc
+                });
+              })
+              .commit();
+  
+            returned.success.push({ minifactu_id: header.minifactu_id, message: "The order to cash transaction was added to oic_db successfully. Id: " + global.order_to_cash_id, data: otc, order_to_cash_id: global.order_to_cash_id });
+          }
       } else {
         let status = 422;
         let message = "Schema validation fail";
@@ -235,7 +241,9 @@ module.exports = app => {
       transactions: data.length,
       errors: returned.error.length,
       success: returned.success.length,
-      processedData: returned
+      processedData: returned,
+      type: "success",
+      return_code: 0
     });
   });
 
