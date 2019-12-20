@@ -106,7 +106,8 @@ module.exports = app => {
 
           if (!header.minifactu_id || header.minifactu_id == "") {
             var message = "Missing node otc.header.minifactu_id at Json request !";
-            var return_code = 1,
+            var return_code = 1;
+            returned.error.push({ message: message, return_code: return_code, type: "error" })
           } else {
             let order_to_cash_id = 0;
             let inserts = await mysql
@@ -210,10 +211,12 @@ module.exports = app => {
               })
               .rollback(e => {
                 let status = 422;
-                let message = "Business error: " + e;
+                let message = "Business error - " + e;
                 console.log(`[${status}] - ${message}`);
                 returned.error.push({
-                  message: `[${status}] - ${message}`,
+                  message: message,
+                  return_code: 1,
+                  type: "error",
                   order_to_cash_id: global.order_to_cash_id,
                   transaction: otc
                 });
@@ -224,10 +227,12 @@ module.exports = app => {
           }
       } else {
         let status = 422;
-        let message = "Schema validation fail";
+        let message = "The request sent was not well formmated. Check at https://app.swaggerhub.com/apis-docs/Smartfit/OrderToCash/";
         console.log(`[${status}] - ${message}`);
         returned.error.push({
-          message: `[${status}] - ${message}`,
+          message: message,
+          return_code: 1,
+          type: "error",
         });
         schema.validate(otc).catch((err) => {
           console.log(err);
