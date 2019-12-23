@@ -16,6 +16,119 @@ const mysql = require("serverless-mysql")({
   onRetry: (err,retries,delay,type) => { console.log('RETRY') }
 });
 
+async function gravaOTCnobanco(otc) {
+  const { header, invoice_customer, receivable, invoice } = otc.otc;
+  let order_to_cash_id = 0;
+  let inserts = await mysql
+    .transaction()
+    .query(
+      "INSERT INTO order_to_cash(country,unity_identification,origin_system,operation,minifactu_id,conciliator_id,fin_id,front_id) VALUES (?,?,?,?,?,?,?,?)",
+      [
+        header.country,
+        header.unity_identification,
+        header.origin_system,
+        header.operation,
+        header.minifactu_id,
+        header.conciliator_id,
+        header.fin_id,
+        header.front_id
+      ]
+    )
+    .query((r) => {
+      global.order_to_cash_id = r.insertId;
+      return [
+        "INSERT INTO receivable(order_to_cash_id,is_smartfin,transaction_type,contract_number,credit_card_brand,truncated_credit_card,current_credit_card_installment,total_credit_card_installment,nsu,authorization_code,price_list_value,gross_value,net_value,interest_value,administration_tax_percentage,administration_tax_value,billing_date,credit_date,conciliator_filename,acquirer_bank_filename,registration_gym_student,fullname_gym_student,identification_gym_student) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        [
+          global.order_to_cash_id,
+          receivable.is_smartfin,
+          receivable.transaction_type,
+          receivable.contract_number,
+          receivable.credit_card_brand,
+          receivable.truncated_credit_card,
+          receivable.current_credit_card_installment,
+          receivable.total_credit_card_installment,
+          receivable.nsu,
+          receivable.authorization_code,
+          receivable.price_list_value,
+          receivable.gross_value,
+          receivable.net_value,
+          receivable.interest_value,
+          receivable.administration_tax_percentage,
+          receivable.administration_tax_value,
+          receivable.billing_date,
+          receivable.credit_date,
+          receivable.conciliator_filename,
+          receivable.acquirer_bank_filename,
+          receivable.registration_gym_student,
+          receivable.fullname_gym_student,
+          receivable.identification_gym_student
+        ]
+      ];
+    })
+    .query((r) => {
+      return [
+      "INSERT INTO invoice_customer(order_to_cash_id,full_name,type_person,identification_financial_responsible,nationality_code,state,city,adress,adress_complement,district,postal_code,area_code,cellphone,email,state_registration,federal_registration,final_consumer,icms_contributor) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);",
+        [
+          global.order_to_cash_id,
+          invoice_customer.full_name,
+          invoice_customer.type_person,
+          invoice_customer.identification_financial_responsible,
+          invoice_customer.nationality_code,
+          invoice_customer.state,
+          invoice_customer.city,
+          invoice_customer.adress,
+          invoice_customer.adress_complement,
+          invoice_customer.district,
+          invoice_customer.postal_code,
+          invoice_customer.area_code,
+          invoice_customer.cellphone,
+          invoice_customer.email,
+          invoice_customer.state_registration,
+          invoice_customer.federal_registration,
+          invoice_customer.final_consumer,
+          invoice_customer.icms_contributor
+        ]
+      ]
+    })
+    .query((r) => {
+      return [
+      "INSERT INTO invoice(order_to_cash_id,transaction_type,is_overdue_recovery) VALUES (?,?,?);",
+        [
+          global.order_to_cash_id,
+          invoice.transaction_type,
+          invoice.is_overdue_recovery
+        ]
+      ]
+    })
+    .query((r) => {
+      for (let indexit = 0; indexit < invoice.invoice_items.length; indexit++) {
+        const it = invoice.invoice_items[indexit];
+        
+        return [
+          "INSERT INTO invoice_items(id_invoice,front_product_id,front_plan_id,front_addon_id,quantity,list_price,sale_price) VALUES (?,?,?,?,?,?,?);",
+            [
+              r.insertId,
+              it.front_product_id,
+              it.front_plan_id,
+              it.front_addon_id,
+              it.quantity,
+              it.list_price,
+              it.sale_price
+            ]
+          ]
+      }
+    })
+    .rollback(e => {
+      let status = 422;
+      let message = "Business error - " + e;
+      console.log(`[${status}] - ${message}`);
+      return false;
+    })
+    .commit();
+
+    return true;
+}
+
 module.exports = app => {
   console.log('Running app on env:' + config.get("ENV") + ' on version:' + config.get("VERSION"));
 
@@ -107,123 +220,115 @@ module.exports = app => {
           if (!header.minifactu_id || header.minifactu_id == "") {
             var message = "Missing node otc.header.minifactu_id at Json request !";
             var return_code = 1;
-            returned.error.push({ message: message, return_code: return_code, type: "error" })
+            returned.error.push({ message: message, return_code: return_code, type: "error", otc: otc })
           } else {
-            let order_to_cash_id = 0;
-            let inserts = await mysql
-              .transaction()
-              .query(
-                "INSERT INTO order_to_cash(country,unity_identification,origin_system,operation,minifactu_id,conciliator_id,fin_id,front_id) VALUES (?,?,?,?,?,?,?,?)",
-                [
-                  header.country,
-                  header.unity_identification,
-                  header.origin_system,
-                  header.operation,
-                  header.minifactu_id,
-                  header.conciliator_id,
-                  header.fin_id,
-                  header.front_id
-                ]
-              )
-              .query((r) => {
-                global.order_to_cash_id = r.insertId;
-                return [
-                  "INSERT INTO receivable(order_to_cash_id,is_smartfin,transaction_type,contract_number,credit_card_brand,truncated_credit_card,current_credit_card_installment,total_credit_card_installment,nsu,authorization_code,price_list_value,gross_value,net_value,interest_value,administration_tax_percentage,administration_tax_value,billing_date,credit_date,conciliator_filename,acquirer_bank_filename,registration_gym_student,fullname_gym_student,identification_gym_student) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                  [
-                    global.order_to_cash_id,
-                    receivable.is_smartfin,
-                    receivable.transaction_type,
-                    receivable.contract_number,
-                    receivable.credit_card_brand,
-                    receivable.truncated_credit_card,
-                    receivable.current_credit_card_installment,
-                    receivable.total_credit_card_installment,
-                    receivable.nsu,
-                    receivable.authorization_code,
-                    receivable.price_list_value,
-                    receivable.gross_value,
-                    receivable.net_value,
-                    receivable.interest_value,
-                    receivable.administration_tax_percentage,
-                    receivable.administration_tax_value,
-                    receivable.billing_date,
-                    receivable.credit_date,
-                    receivable.conciliator_filename,
-                    receivable.acquirer_bank_filename,
-                    receivable.registration_gym_student,
-                    receivable.fullname_gym_student,
-                    receivable.identification_gym_student
-                  ]
-                ];
-              })
-              .query((r) => {
-                return [
-                "INSERT INTO invoice_customer(order_to_cash_id,full_name,type_person,identification_financial_responsible,nationality_code,state,city,adress,adress_complement,district,postal_code,area_code,cellphone,email,state_registration,federal_registration,final_consumer,icms_contributor) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);",
-                  [
-                    global.order_to_cash_id,
-                    invoice_customer.full_name,
-                    invoice_customer.type_person,
-                    invoice_customer.identification_financial_responsible,
-                    invoice_customer.nationality_code,
-                    invoice_customer.state,
-                    invoice_customer.city,
-                    invoice_customer.adress,
-                    invoice_customer.adress_complement,
-                    invoice_customer.district,
-                    invoice_customer.postal_code,
-                    invoice_customer.area_code,
-                    invoice_customer.cellphone,
-                    invoice_customer.email,
-                    invoice_customer.state_registration,
-                    invoice_customer.federal_registration,
-                    invoice_customer.final_consumer,
-                    invoice_customer.icms_contributor
-                  ]
-                ]
-              })
-              .query((r) => {
-                return [
-                "INSERT INTO invoice(order_to_cash_id,transaction_type,is_overdue_recovery) VALUES (?,?,?);",
-                  [
-                    global.order_to_cash_id,
-                    invoice.transaction_type,
-                    invoice.is_overdue_recovery
-                  ]
-                ]
-              })
-              .query((r) => {
-                for (let indexit = 0; indexit < invoice.invoice_items.length; indexit++) {
-                  const it = invoice.invoice_items[indexit];
-                  
-                  return [
-                    "INSERT INTO invoice_items(id_invoice,front_product_id,front_plan_id,front_addon_id,quantity,list_price,sale_price) VALUES (?,?,?,?,?,?,?);",
-                      [
-                        r.insertId,
-                        it.front_product_id,
-                        it.front_plan_id,
-                        it.front_addon_id,
-                        it.quantity,
-                        it.list_price,
-                        it.sale_price
-                      ]
-                    ]
+            const minifactu = await mysql.query('SELECT * FROM order_to_cash WHERE minifactu_id = ?', [header.minifactu_id]);
+            
+            if (minifactu.length > 0) {
+              if (minifactu.erp_receivable_status_transaction == "error_at_trying_to_process" || minifactu.erp_receivable_status_transaction == "error_trying_to_create_at_erp" || minifactu.erp_invoice_status_transaction == "error_trying_to_create_at_erp" || minifactu.erp_invoice_customer_status_transaction == "error_trying_to_create_at_erp")  {
+                  returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 6, message: "The order to cash transaction was already added to oic_db !", order_to_cash: minifactu})
+                  continue;
+              }
+              else {
+                const orgfromtoversion = await mysql.query('SELECT * FROM organization_from_to_version WHERE organization_from_to_unity_identification = ? ORDER BY created_at DESC', [header.unity_identification]);
+                if (orgfromtoversion.length > 0) {
+                  if (header.origin_system == "smartsystem" || header.origin_system == "racesystem" || header.origin_system == "nossystem") {
+                    if (invoice.invoice_items.invoice_items[0].front_product_id != null && invoice.invoice_items.invoice_items[0].front_plan_id != null ) {
+                      const productfromtoversion = await mysql.query('SELECT * FROM product_from_to_version WHERE country = ? AND product_from_to_origin_system = ? AND product_from_to_operation = ? AND product_from_to_front_product_id = ? ORDER BY created_at DESC', [header.country, header.origin_system, header.operation, invoice.invoice_items.invoice_items[0].front_product_id]);
+                      if (productfromtoversion.length > 0) {
+                        const planfromtoversion = await mysql.query('SELECT * FROM plan_from_to_version WHERE country = ? AND plan_from_to_origin_system = ? AND plan_from_to_operation = ? AND plan_from_to_front_plan_id = ? ORDER BY created_at DESC', [header.country, header.origin_system, header.operation, invoice.invoice_items.invoice_items[0].front_plan_id]);
+                        if (planfromtoversion.length < 1) {
+                          returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 4, message: "The front_plan_id " +  invoice.invoice_items.invoice_items[0].front_plan_id + " sent doesn't exist at oic_db for " + header.origin_system + " and " + header.operation + ". Please talk to ERP Team !", order_to_cash: null})
+                          continue;
+                        } 
+                        //do transaction
+                        let returnPersistent = await gravaOTCnobanco(otc);
+                        if (returnPersistent) {
+                          console.log(header.minifactu_id + ' - db insert success');
+                          returned.success.push({ minifactu_id: header.minifactu_id, type: "success", return_code: 1, message: "The order to cash transaction was added to oic_db successfully!", order_to_cash: otc})
+                        } else {
+                          console.log(header.minifactu_id + ' - db insert fail');
+                          returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 99, message: "Error on database persistance! Please check logs!", order_to_cash: otc})
+                          throw new Error('Error on database persistance! Please check logs');
+                        }
+                        //do transaction
+                      } else {
+                        returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 3, message: "The front_product_id " +  invoice.invoice_items.invoice_items[0].front_product_id + " sent doesn't exist at oic_db for " + header.origin_system + " and " + header.operation + ". Please talk to ERP Team !", order_to_cash: null})
+                        continue;
+                      }
+                    } else {
+                      returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 7, message: "Order to cash transactions from " +  header.origin_system + " must have front_product_id and front_plan_id simultaneously or only front_addon_id filled at invoice_items", order_to_cash: null})
+                      continue;
+                    }
+
+                    if (invoice.invoice_items.invoice_items[0].front_addon_id != null) {
+                      const addonfromtoversion = await mysql.query('SELECT * FROM addon_from_to_version WHERE country = ? AND addon_from_to_origin_system = ? AND addon_from_to_operation = ? AND addon_from_to_front_addon_id = ? ORDER BY created_at DESC', [header.country, header.origin_system, header.operation, invoice.invoice_items.invoice_items[0].front_addon_id]);
+                        if (planfromtoversion.length < 1) {
+                          returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 5, message: "The front_addon_id " +  invoice.invoice_items.invoice_items[0].front_addon_id + " sent doesn't exist at oic_db for " + header.origin_system + " and " + header.operation + ". Please talk to ERP Team !", order_to_cash: null})
+                          continue;
+                        } 
+                    }
+                  } else if (header.origin_system == "biosystem") {
+                    if (invoice.invoice_items.invoice_items[0].front_product_id != null) {
+                      const productfromtoversion = await mysql.query('SELECT * FROM product_from_to_version WHERE country = ? AND product_from_to_origin_system = ? AND product_from_to_operation = ? AND product_from_to_front_product_id = ? ORDER BY created_at DESC', [header.country, header.origin_system, header.operation, invoice.invoice_items.invoice_items[0].front_product_id]);
+                      if (productfromtoversion.length > 0) {
+                        const planfromtoversion = await mysql.query('SELECT * FROM plan_from_to_version WHERE country = ? AND plan_from_to_origin_system = ? AND plan_from_to_operation = ? AND plan_from_to_front_plan_id = ? ORDER BY created_at DESC', [header.country, header.origin_system, header.operation, invoice.invoice_items.invoice_items[0].front_plan_id]);
+                        if (planfromtoversion.length < 1) {
+                          returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 4, message: "The front_plan_id " +  invoice.invoice_items.invoice_items[0].front_plan_id + " sent doesn't exist at oic_db for " + header.origin_system + " and " + header.operation + ". Please talk to ERP Team !", order_to_cash: null})
+                          continue;
+                        } 
+                        //do transaction
+                        let returnPersistent = await gravaOTCnobanco(otc);
+                        if (returnPersistent) {
+                          console.log(header.minifactu_id + ' - db insert success');
+                          returned.success.push({ minifactu_id: header.minifactu_id, type: "success", return_code: 1, message: "The order to cash transaction was added to oic_db successfully!", order_to_cash: otc})
+                        } else {
+                          console.log(header.minifactu_id + ' - db insert fail');
+                          returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 99, message: "Error on database persistance! Please check logs!", order_to_cash: otc})
+                          throw new Error('Error on database persistance! Please check logs');
+                        }
+                        //do transaction
+                      } else {
+                        returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 3, message: "The front_product_id " +  invoice.invoice_items.invoice_items[0].front_product_id + " sent doesn't exist at oic_db for " + header.origin_system + " and " + header.operation + ". Please talk to ERP Team !", order_to_cash: null})
+                        continue;
+                      }
+                    } else {
+                      returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 8, message: "Order to cash transactions from " +  header.origin_system + " must have front_product_id and front_plan_id simultaneously or only front_addon_id filled at invoice_items", order_to_cash: null})
+                      continue;
+                    }
+                  } else if (invoice.invoice_items.invoice_items[0].front_product_id != null) {
+                    const productfromtoversion = await mysql.query('SELECT * FROM product_from_to_version WHERE country = ? AND product_from_to_origin_system = ? AND product_from_to_operation = ? AND product_from_to_front_product_id = ? ORDER BY created_at DESC', [header.country, header.origin_system, header.operation, invoice.invoice_items.invoice_items[0].front_product_id]);
+                    if (productfromtoversion.length > 0) {
+                      const planfromtoversion = await mysql.query('SELECT * FROM plan_from_to_version WHERE country = ? AND plan_from_to_origin_system = ? AND plan_from_to_operation = ? AND plan_from_to_front_plan_id = ? ORDER BY created_at DESC', [header.country, header.origin_system, header.operation, invoice.invoice_items.invoice_items[0].front_plan_id]);
+                      if (planfromtoversion.length < 1) {
+                        returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 4, message: "The front_plan_id " +  invoice.invoice_items.invoice_items[0].front_plan_id + " sent doesn't exist at oic_db for " + header.origin_system + " and " + header.operation + ". Please talk to ERP Team !", order_to_cash: null})
+                        continue;
+                      } 
+                      //do transaction
+                      let returnPersistent = await gravaOTCnobanco(otc);
+                      if (returnPersistent) {
+                        console.log(header.minifactu_id + ' - db insert success');
+                        returned.success.push({ minifactu_id: header.minifactu_id, type: "success", return_code: 1, message: "The order to cash transaction was added to oic_db successfully!", order_to_cash: otc})
+                      } else {
+                        console.log(header.minifactu_id + ' - db insert fail');
+                        returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 99, message: "Error on database persistance! Please check logs!", order_to_cash: otc})
+                        throw new Error('Error on database persistance! Please check logs');
+                      }
+                      //do transaction
+                    } else {
+                      returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 3, message: "The front_product_id " +  invoice.invoice_items.invoice_items[0].front_product_id + " sent doesn't exist at oic_db for " + header.origin_system + " and " + header.operation + ". Please talk to ERP Team !", order_to_cash: null})
+                      continue;
+                    }
+                  } else {
+                    returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 9, message: "Order to cash transactions from " +  header.origin_system + " must have front_product_id and front_plan_id simultaneously or only front_addon_id filled at invoice_items", order_to_cash: null})
+                    continue;
+                  }
+                } else {
+                  returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 2, message: "The unity_identification sent " + header.unity_identification + " doesn't exist at oic_db. Please talk to ERP Team !", order_to_cash: null})
+                  continue;
                 }
-              })
-              .rollback(e => {
-                let status = 422;
-                let message = "Business error - " + e;
-                console.log(`[${status}] - ${message}`);
-                returned.error.push({
-                  message: message,
-                  return_code: 1,
-                  type: "error",
-                  order_to_cash_id: global.order_to_cash_id,
-                  transaction: otc
-                });
-              })
-              .commit();
-  
-            returned.success.push({ minifactu_id: header.minifactu_id, message: "The order to cash transaction was added to oic_db successfully. Id: " + global.order_to_cash_id, data: otc, order_to_cash_id: global.order_to_cash_id });
+              }
+            }
           }
       } else {
         let status = 422;
@@ -240,30 +345,13 @@ module.exports = app => {
       }
     }
 
-    res.status(200).send({
-      message: "processed transactions",
-      datarequest: data,
+    await res.status(200).send({
+      message: "batch processed transactions",
       transactions: data.length,
       errors: returned.error.length,
       success: returned.success.length,
-      processedData: returned,
-      type: "success",
-      return_code: 0
+      results: returned,
     });
   });
 
-  app.put("/transaction/:id", (req, res) => {
-    const id = req.params.id;
-    const data = req.body;
-
-    schema.isValid(data).then(valid => {
-      if (valid) {
-        res.status(201).send({ message: "update a transaction" });
-      } else {
-        res.status(422).send({ message: "Schema validation fail" });
-      }
-    });
-
-    res.status(200).send({ message: `update transaction ${id}` });
-  });
 };
