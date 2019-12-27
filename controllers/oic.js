@@ -372,12 +372,8 @@ module.exports = app => {
       }
     }
 
-    await res.status(200).send({
-      message: "batch processed transactions",
-      transactions: data.length,
-      errors: returned.error.length,
-      success: returned.success.length,
-      results: returned,
-    });
+    await res.status(200).send(
+      returned.success.concat(returned.error)
+    );
   });
 };
