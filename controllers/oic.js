@@ -226,142 +226,263 @@ module.exports = app => {
 
           if (!header.minifactu_id || header.minifactu_id == "") {
             var message = "Missing node otc.header.minifactu_id at Json request !";
-            var return_code = 1;
             console.log(message);
-            returned.error.push({ message: message, return_code: return_code, type: "error", otc: otc });
+            returned.error.push({ message: message, return_code: 1, type: "error", otc: otc });
           } else {
             const minifactu = await mysql.query('SELECT * FROM order_to_cash WHERE minifactu_id = ?', [header.minifactu_id]);
-            console.log(minifactu);
             otc.otc.minifactu = minifactu; 
             if (minifactu.length > 0) {
               if (minifactu.erp_receivable_status_transaction == "error_at_trying_to_process" || minifactu.erp_receivable_status_transaction == "error_trying_to_create_at_erp" || minifactu.erp_invoice_status_transaction == "error_trying_to_create_at_erp" || minifactu.erp_invoice_customer_status_transaction == "error_trying_to_create_at_erp")  {
-                  console.log('The order to cash transaction was already added to oic_db - ' + minifactu);
-                  returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 6, message: "The order to cash transaction was already added to oic_db !", order_to_cash: minifactu})
-                  continue;
-              }
-              else {
+                console.log('The order to cash transaction was already added to oic_db - ' + minifactu);
+                returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 6, message: "The order to cash transaction was already added to oic_db !", order_to_cash: minifactu})
+                continue;
+              } else {
                 const orgfromtoversion = await mysql.query('SELECT * FROM organization_from_to_version WHERE organization_from_to_unity_identification = ? ORDER BY created_at DESC', [header.unity_identification]);
                 otc.otc.orgfromtoversion = orgfromtoversion;
                 if (orgfromtoversion.length > 0) {
-                  if (header.origin_system == "smartsystem" || header.origin_system == "racesystem" || header.origin_system == "nossystem") {
-                    if (invoice.invoice_items.invoice_items[0].front_product_id != null && invoice.invoice_items.invoice_items[0].front_plan_id != null ) {
-                      const productfromtoversion = await mysql.query('SELECT * FROM product_from_to_version WHERE country = ? AND product_from_to_origin_system = ? AND product_from_to_operation = ? AND product_from_to_front_product_id = ? ORDER BY created_at DESC', [header.country, header.origin_system, header.operation, invoice.invoice_items.invoice_items[0].front_product_id]);
-                      otc.otc.productfromtoversion = productfromtoversion;
-                      if (productfromtoversion.length > 0) {
-                        const planfromtoversion = await mysql.query('SELECT * FROM plan_from_to_version WHERE country = ? AND plan_from_to_origin_system = ? AND plan_from_to_operation = ? AND plan_from_to_front_plan_id = ? ORDER BY created_at DESC', [header.country, header.origin_system, header.operation, invoice.invoice_items.invoice_items[0].front_plan_id]);
-                        otc.otc.planfromtoversion = planfromtoversion;
-                        if (planfromtoversion.length < 1) {
-                          returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 4, message: "The front_plan_id " +  invoice.invoice_items.invoice_items[0].front_plan_id + " sent doesn't exist at oic_db for " + header.origin_system + " and " + header.operation + ". Please talk to ERP Team !", order_to_cash: null})
-                          continue;
-                        } 
-                        //do transaction
-                        let returnPersistent = await gravaOTCnobanco(otc);
-                        if (returnPersistent) {
-                          delete otc.otc.minifactu;
-                          delete otc.otc.orgfromtoversion;
-                          delete otc.otc.productfromtoversion;
-                          delete otc.otc.planfromtoversion;
-                          console.log(header.minifactu_id + ' - db insert success');
-                          returned.success.push({ minifactu_id: header.minifactu_id, type: "success", return_code: 1, message: "The order to cash transaction was added to oic_db successfully!", order_to_cash: otc})
-                        } else {
-                          console.log(header.minifactu_id + ' - db insert fail');
-                          returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 99, message: "Error on database persistance! Please check logs!", order_to_cash: otc})
-                          throw new Error('Error on database persistance! Please check logs');
-                        }
-                        //do transaction
-                      } else {
-                        returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 3, message: "The front_product_id " +  invoice.invoice_items.invoice_items[0].front_product_id + " sent doesn't exist at oic_db for " + header.origin_system + " and " + header.operation + ". Please talk to ERP Team !", order_to_cash: null})
-                        continue;
-                      }
-                    } else {
-                      returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 7, message: "Order to cash transactions from " +  header.origin_system + " must have front_product_id and front_plan_id simultaneously or only front_addon_id filled at invoice_items", order_to_cash: null})
-                      continue;
-                    }
+                    if (header.origin_system == "smartsystem" || header.origin_system == "racesystem" || header.origin_system == "nossystem") {
+                      if (invoice.invoice_items.invoice_items[0].front_product_id != null && invoice.invoice_items.invoice_items[0].front_plan_id != null ) {
+                          const productfromtoversion = await mysql.query('SELECT * FROM product_from_to_version WHERE country = ? AND product_from_to_origin_system = ? AND product_from_to_operation = ? AND product_from_to_front_product_id = ? ORDER BY created_at DESC', [header.country, header.origin_system, header.operation, invoice.invoice_items.invoice_items[0].front_product_id]);
+                          otc.otc.productfromtoversion = productfromtoversion;
+                          if (productfromtoversion.length > 0) {
+                            const planfromtoversion = await mysql.query('SELECT * FROM plan_from_to_version WHERE country = ? AND plan_from_to_origin_system = ? AND plan_from_to_operation = ? AND plan_from_to_front_plan_id = ? ORDER BY created_at DESC', [header.country, header.origin_system, header.operation, invoice.invoice_items.invoice_items[0].front_plan_id]);
+                            otc.otc.planfromtoversion = planfromtoversion;
+                          
+                            if (planfromtoversion.length < 1) {
+                                returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 4, message: "The front_plan_id " +  invoice.invoice_items.invoice_items[0].front_plan_id + " sent doesn't exist at oic_db for " + header.origin_system + " and " + header.operation + ". Please talk to ERP Team !", order_to_cash: null})
+                                continue;
+                            } 
 
-                    if (invoice.invoice_items.invoice_items[0].front_addon_id != null) {
-                      const addonfromtoversion = await mysql.query('SELECT * FROM addon_from_to_version WHERE country = ? AND addon_from_to_origin_system = ? AND addon_from_to_operation = ? AND addon_from_to_front_addon_id = ? ORDER BY created_at DESC', [header.country, header.origin_system, header.operation, invoice.invoice_items.invoice_items[0].front_addon_id]);
-                      otc.otc.addonfromtoversion = addonfromtoversion;
-                        if (planfromtoversion.length < 1) {
-                          returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 5, message: "The front_addon_id " +  invoice.invoice_items.invoice_items[0].front_addon_id + " sent doesn't exist at oic_db for " + header.origin_system + " and " + header.operation + ". Please talk to ERP Team !", order_to_cash: null})
+                            //do transaction
+                            let returnPersistent = await gravaOTCnobanco(otc);
+                            if (returnPersistent) {
+                                delete otc.otc.minifactu;
+                                delete otc.otc.orgfromtoversion;
+                                delete otc.otc.productfromtoversion;
+                                delete otc.otc.planfromtoversion;
+                                console.log(header.minifactu_id + ' - db insert success');
+                                returned.success.push({ minifactu_id: header.minifactu_id, type: "success", return_code: 1, message: "The order to cash transaction was added to oic_db successfully!", order_to_cash: otc})
+                            } else {
+                                console.log(header.minifactu_id + ' - db insert fail');
+                                returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 99, message: "Error on database persistance! Please check logs!", order_to_cash: otc})
+                                throw new Error('Error on database persistance! Please check logs');
+                            }
+                            //do transaction
+                          } else {
+                            returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 3, message: "The front_product_id " +  invoice.invoice_items.invoice_items[0].front_product_id + " sent doesn't exist at oic_db for " + header.origin_system + " and " + header.operation + ". Please talk to ERP Team !", order_to_cash: null})
+                            continue;
+                          }
+                      } else {
+                          returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 7, message: "Order to cash transactions from " +  header.origin_system + " must have front_product_id and front_plan_id simultaneously or only front_addon_id filled at invoice_items", order_to_cash: null})
                           continue;
-                        } 
-                    }
-                  } else if (header.origin_system == "biosystem") {
-                    if (invoice.invoice_items.invoice_items[0].front_product_id != null) {
+                      }
+            
+                      if (invoice.invoice_items.invoice_items[0].front_addon_id != null) {
+                          const addonfromtoversion = await mysql.query('SELECT * FROM addon_from_to_version WHERE country = ? AND addon_from_to_origin_system = ? AND addon_from_to_operation = ? AND addon_from_to_front_addon_id = ? ORDER BY created_at DESC', [header.country, header.origin_system, header.operation, invoice.invoice_items.invoice_items[0].front_addon_id]);
+                          otc.otc.addonfromtoversion = addonfromtoversion;
+                          if (planfromtoversion.length < 1) {
+                              returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 5, message: "The front_addon_id " +  invoice.invoice_items.invoice_items[0].front_addon_id + " sent doesn't exist at oic_db for " + header.origin_system + " and " + header.operation + ". Please talk to ERP Team !", order_to_cash: null})
+                              continue;
+                          } 
+                      }
+                    } else if (header.origin_system == "biosystem") {
+                      if (invoice.invoice_items.invoice_items[0].front_product_id != null) {
+                        const productfromtoversion = await mysql.query('SELECT * FROM product_from_to_version WHERE country = ? AND product_from_to_origin_system = ? AND product_from_to_operation = ? AND product_from_to_front_product_id = ? ORDER BY created_at DESC', [header.country, header.origin_system, header.operation, invoice.invoice_items.invoice_items[0].front_product_id]);
+                        otc.otc.productfromtoversion = productfromtoversion;
+                          
+                        if (productfromtoversion.length > 0) {
+                          const planfromtoversion = await mysql.query('SELECT * FROM plan_from_to_version WHERE country = ? AND plan_from_to_origin_system = ? AND plan_from_to_operation = ? AND plan_from_to_front_plan_id = ? ORDER BY created_at DESC', [header.country, header.origin_system, header.operation, invoice.invoice_items.invoice_items[0].front_plan_id]);
+                          otc.otc.planfromtoversion = planfromtoversion;
+                          
+                          if (planfromtoversion.length < 1) {
+                              returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 4, message: "The front_plan_id " +  invoice.invoice_items.invoice_items[0].front_plan_id + " sent doesn't exist at oic_db for " + header.origin_system + " and " + header.operation + ". Please talk to ERP Team !", order_to_cash: null})
+                              continue;
+                          } 
+
+                          //do transaction
+                          let returnPersistent = await gravaOTCnobanco(otc);
+                          if (returnPersistent) {
+                            delete otc.otc.minifactu;
+                            delete otc.otc.orgfromtoversion;
+                            delete otc.otc.productfromtoversion;
+                            delete otc.otc.planfromtoversion;
+                            console.log(header.minifactu_id + ' - db insert success');
+                            returned.success.push({ minifactu_id: header.minifactu_id, type: "success", return_code: 1, message: "The order to cash transaction was added to oic_db successfully!", order_to_cash: otc})
+                          } else {
+                            console.log(header.minifactu_id + ' - db insert fail');
+                            returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 99, message: "Error on database persistance! Please check logs!", order_to_cash: otc})
+                            throw new Error('Error on database persistance! Please check logs');
+                          }
+                          //do transaction
+                        } else {
+                          returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 3, message: "The front_product_id " +  invoice.invoice_items.invoice_items[0].front_product_id + " sent doesn't exist at oic_db for " + header.origin_system + " and " + header.operation + ". Please talk to ERP Team !", order_to_cash: null})
+                          continue;
+                        }
+                      } else {
+                          returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 8, message: "Order to cash transactions from " +  header.origin_system + " must have front_product_id and front_plan_id simultaneously or only front_addon_id filled at invoice_items", order_to_cash: null})
+                          continue;
+                      }
+                    } else if (invoice.invoice_items.invoice_items[0].front_product_id != null) {
                       const productfromtoversion = await mysql.query('SELECT * FROM product_from_to_version WHERE country = ? AND product_from_to_origin_system = ? AND product_from_to_operation = ? AND product_from_to_front_product_id = ? ORDER BY created_at DESC', [header.country, header.origin_system, header.operation, invoice.invoice_items.invoice_items[0].front_product_id]);
                       otc.otc.productfromtoversion = productfromtoversion;
                       if (productfromtoversion.length > 0) {
-                        const planfromtoversion = await mysql.query('SELECT * FROM plan_from_to_version WHERE country = ? AND plan_from_to_origin_system = ? AND plan_from_to_operation = ? AND plan_from_to_front_plan_id = ? ORDER BY created_at DESC', [header.country, header.origin_system, header.operation, invoice.invoice_items.invoice_items[0].front_plan_id]);
-                        otc.otc.planfromtoversion = planfromtoversion;
-                        if (planfromtoversion.length < 1) {
+                          const planfromtoversion = await mysql.query('SELECT * FROM plan_from_to_version WHERE country = ? AND plan_from_to_origin_system = ? AND plan_from_to_operation = ? AND plan_from_to_front_plan_id = ? ORDER BY created_at DESC', [header.country, header.origin_system, header.operation, invoice.invoice_items.invoice_items[0].front_plan_id]);
+                          otc.otc.planfromtoversion = planfromtoversion;
+                          if (planfromtoversion.length < 1) {
                           returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 4, message: "The front_plan_id " +  invoice.invoice_items.invoice_items[0].front_plan_id + " sent doesn't exist at oic_db for " + header.origin_system + " and " + header.operation + ". Please talk to ERP Team !", order_to_cash: null})
                           continue;
-                        } 
-                        //do transaction
-                        let returnPersistent = await gravaOTCnobanco(otc);
-                        if (returnPersistent) {
+                          } 
+                          //do transaction
+                          let returnPersistent = await gravaOTCnobanco(otc);
+                          if (returnPersistent) {
                           delete otc.otc.minifactu;
                           delete otc.otc.orgfromtoversion;
                           delete otc.otc.productfromtoversion;
                           delete otc.otc.planfromtoversion;
                           console.log(header.minifactu_id + ' - db insert success');
                           returned.success.push({ minifactu_id: header.minifactu_id, type: "success", return_code: 1, message: "The order to cash transaction was added to oic_db successfully!", order_to_cash: otc})
-                        } else {
+                          } else {
                           console.log(header.minifactu_id + ' - db insert fail');
                           returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 99, message: "Error on database persistance! Please check logs!", order_to_cash: otc})
                           throw new Error('Error on database persistance! Please check logs');
-                        }
-                        //do transaction
+                          }
+                          //do transaction
                       } else {
-                        returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 3, message: "The front_product_id " +  invoice.invoice_items.invoice_items[0].front_product_id + " sent doesn't exist at oic_db for " + header.origin_system + " and " + header.operation + ". Please talk to ERP Team !", order_to_cash: null})
-                        continue;
+                          returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 3, message: "The front_product_id " +  invoice.invoice_items.invoice_items[0].front_product_id + " sent doesn't exist at oic_db for " + header.origin_system + " and " + header.operation + ". Please talk to ERP Team !", order_to_cash: null})
+                          continue;
                       }
                     } else {
-                      returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 8, message: "Order to cash transactions from " +  header.origin_system + " must have front_product_id and front_plan_id simultaneously or only front_addon_id filled at invoice_items", order_to_cash: null})
+                      returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 9, message: "Order to cash transactions from " +  header.origin_system + " must have front_product_id and front_plan_id simultaneously or only front_addon_id filled at invoice_items", order_to_cash: null})
                       continue;
                     }
-                  } else if (invoice.invoice_items.invoice_items[0].front_product_id != null) {
-                    const productfromtoversion = await mysql.query('SELECT * FROM product_from_to_version WHERE country = ? AND product_from_to_origin_system = ? AND product_from_to_operation = ? AND product_from_to_front_product_id = ? ORDER BY created_at DESC', [header.country, header.origin_system, header.operation, invoice.invoice_items.invoice_items[0].front_product_id]);
-                    otc.otc.productfromtoversion = productfromtoversion;
-                    if (productfromtoversion.length > 0) {
-                      const planfromtoversion = await mysql.query('SELECT * FROM plan_from_to_version WHERE country = ? AND plan_from_to_origin_system = ? AND plan_from_to_operation = ? AND plan_from_to_front_plan_id = ? ORDER BY created_at DESC', [header.country, header.origin_system, header.operation, invoice.invoice_items.invoice_items[0].front_plan_id]);
-                      otc.otc.planfromtoversion = planfromtoversion;
-                      if (planfromtoversion.length < 1) {
-                        returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 4, message: "The front_plan_id " +  invoice.invoice_items.invoice_items[0].front_plan_id + " sent doesn't exist at oic_db for " + header.origin_system + " and " + header.operation + ". Please talk to ERP Team !", order_to_cash: null})
-                        continue;
-                      } 
-                      //do transaction
-                      let returnPersistent = await gravaOTCnobanco(otc);
-                      if (returnPersistent) {
-                        delete otc.otc.minifactu;
-                        delete otc.otc.orgfromtoversion;
-                        delete otc.otc.productfromtoversion;
-                        delete otc.otc.planfromtoversion;
-                        console.log(header.minifactu_id + ' - db insert success');
-                        returned.success.push({ minifactu_id: header.minifactu_id, type: "success", return_code: 1, message: "The order to cash transaction was added to oic_db successfully!", order_to_cash: otc})
-                      } else {
-                        console.log(header.minifactu_id + ' - db insert fail');
-                        returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 99, message: "Error on database persistance! Please check logs!", order_to_cash: otc})
-                        throw new Error('Error on database persistance! Please check logs');
-                      }
-                      //do transaction
-                    } else {
-                      returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 3, message: "The front_product_id " +  invoice.invoice_items.invoice_items[0].front_product_id + " sent doesn't exist at oic_db for " + header.origin_system + " and " + header.operation + ". Please talk to ERP Team !", order_to_cash: null})
-                      continue;
-                    }
-                  } else {
-                    returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 9, message: "Order to cash transactions from " +  header.origin_system + " must have front_product_id and front_plan_id simultaneously or only front_addon_id filled at invoice_items", order_to_cash: null})
-                    continue;
-                  }
                 } else {
                   returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 2, message: "The unity_identification sent " + header.unity_identification + " doesn't exist at oic_db. Please talk to ERP Team !", order_to_cash: null})
                   continue;
                 }
               }
             } else {
-              console.log('The order to cash transaction not exists on oic_db - ' + header.minifactu_id);
-              returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 98, message: "The order to cash transaction not exists on oic_db!", order_to_cash: header.minifactu_id})
-              continue;
+              const orgfromtoversion = await mysql.query('SELECT * FROM organization_from_to_version WHERE organization_from_to_unity_identification = ? ORDER BY created_at DESC', [header.unity_identification]);
+                otc.otc.orgfromtoversion = orgfromtoversion;
+                if (orgfromtoversion.length > 0) {
+                    if (header.origin_system == "smartsystem" || header.origin_system == "racesystem" || header.origin_system == "nossystem") {
+                      if (invoice.invoice_items.invoice_items[0].front_product_id != null && invoice.invoice_items.invoice_items[0].front_plan_id != null ) {
+                          const productfromtoversion = await mysql.query('SELECT * FROM product_from_to_version WHERE country = ? AND product_from_to_origin_system = ? AND product_from_to_operation = ? AND product_from_to_front_product_id = ? ORDER BY created_at DESC', [header.country, header.origin_system, header.operation, invoice.invoice_items.invoice_items[0].front_product_id]);
+                          otc.otc.productfromtoversion = productfromtoversion;
+                          if (productfromtoversion.length > 0) {
+                            const planfromtoversion = await mysql.query('SELECT * FROM plan_from_to_version WHERE country = ? AND plan_from_to_origin_system = ? AND plan_from_to_operation = ? AND plan_from_to_front_plan_id = ? ORDER BY created_at DESC', [header.country, header.origin_system, header.operation, invoice.invoice_items.invoice_items[0].front_plan_id]);
+                            otc.otc.planfromtoversion = planfromtoversion;
+                          
+                            if (planfromtoversion.length < 1) {
+                                returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 4, message: "The front_plan_id " +  invoice.invoice_items.invoice_items[0].front_plan_id + " sent doesn't exist at oic_db for " + header.origin_system + " and " + header.operation + ". Please talk to ERP Team !", order_to_cash: null})
+                                continue;
+                            } 
+
+                            //do transaction
+                            let returnPersistent = await gravaOTCnobanco(otc);
+                            if (returnPersistent) {
+                                delete otc.otc.minifactu;
+                                delete otc.otc.orgfromtoversion;
+                                delete otc.otc.productfromtoversion;
+                                delete otc.otc.planfromtoversion;
+                                console.log(header.minifactu_id + ' - db insert success');
+                                returned.success.push({ minifactu_id: header.minifactu_id, type: "success", return_code: 1, message: "The order to cash transaction was added to oic_db successfully!", order_to_cash: otc})
+                            } else {
+                                console.log(header.minifactu_id + ' - db insert fail');
+                                returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 99, message: "Error on database persistance! Please check logs!", order_to_cash: otc})
+                                throw new Error('Error on database persistance! Please check logs');
+                            }
+                            //do transaction
+                          } else {
+                            returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 3, message: "The front_product_id " +  invoice.invoice_items.invoice_items[0].front_product_id + " sent doesn't exist at oic_db for " + header.origin_system + " and " + header.operation + ". Please talk to ERP Team !", order_to_cash: null})
+                            continue;
+                          }
+                      } else {
+                          returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 7, message: "Order to cash transactions from " +  header.origin_system + " must have front_product_id and front_plan_id simultaneously or only front_addon_id filled at invoice_items", order_to_cash: null})
+                          continue;
+                      }
+            
+                      if (invoice.invoice_items.invoice_items[0].front_addon_id != null) {
+                          const addonfromtoversion = await mysql.query('SELECT * FROM addon_from_to_version WHERE country = ? AND addon_from_to_origin_system = ? AND addon_from_to_operation = ? AND addon_from_to_front_addon_id = ? ORDER BY created_at DESC', [header.country, header.origin_system, header.operation, invoice.invoice_items.invoice_items[0].front_addon_id]);
+                          otc.otc.addonfromtoversion = addonfromtoversion;
+                          if (planfromtoversion.length < 1) {
+                              returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 5, message: "The front_addon_id " +  invoice.invoice_items.invoice_items[0].front_addon_id + " sent doesn't exist at oic_db for " + header.origin_system + " and " + header.operation + ". Please talk to ERP Team !", order_to_cash: null})
+                              continue;
+                          } 
+                      }
+                    } else if (header.origin_system == "biosystem") {
+                      if (invoice.invoice_items.invoice_items[0].front_product_id != null) {
+                        const productfromtoversion = await mysql.query('SELECT * FROM product_from_to_version WHERE country = ? AND product_from_to_origin_system = ? AND product_from_to_operation = ? AND product_from_to_front_product_id = ? ORDER BY created_at DESC', [header.country, header.origin_system, header.operation, invoice.invoice_items.invoice_items[0].front_product_id]);
+                        otc.otc.productfromtoversion = productfromtoversion;
+                          
+                        if (productfromtoversion.length > 0) {
+                          const planfromtoversion = await mysql.query('SELECT * FROM plan_from_to_version WHERE country = ? AND plan_from_to_origin_system = ? AND plan_from_to_operation = ? AND plan_from_to_front_plan_id = ? ORDER BY created_at DESC', [header.country, header.origin_system, header.operation, invoice.invoice_items.invoice_items[0].front_plan_id]);
+                          otc.otc.planfromtoversion = planfromtoversion;
+                          
+                          if (planfromtoversion.length < 1) {
+                              returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 4, message: "The front_plan_id " +  invoice.invoice_items.invoice_items[0].front_plan_id + " sent doesn't exist at oic_db for " + header.origin_system + " and " + header.operation + ". Please talk to ERP Team !", order_to_cash: null})
+                              continue;
+                          } 
+
+                          //do transaction
+                          let returnPersistent = await gravaOTCnobanco(otc);
+                          if (returnPersistent) {
+                            delete otc.otc.minifactu;
+                            delete otc.otc.orgfromtoversion;
+                            delete otc.otc.productfromtoversion;
+                            delete otc.otc.planfromtoversion;
+                            console.log(header.minifactu_id + ' - db insert success');
+                            returned.success.push({ minifactu_id: header.minifactu_id, type: "success", return_code: 1, message: "The order to cash transaction was added to oic_db successfully!", order_to_cash: otc})
+                          } else {
+                            console.log(header.minifactu_id + ' - db insert fail');
+                            returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 99, message: "Error on database persistance! Please check logs!", order_to_cash: otc})
+                            throw new Error('Error on database persistance! Please check logs');
+                          }
+                          //do transaction
+                        } else {
+                          returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 3, message: "The front_product_id " +  invoice.invoice_items.invoice_items[0].front_product_id + " sent doesn't exist at oic_db for " + header.origin_system + " and " + header.operation + ". Please talk to ERP Team !", order_to_cash: null})
+                          continue;
+                        }
+                      } else {
+                          returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 8, message: "Order to cash transactions from " +  header.origin_system + " must have front_product_id and front_plan_id simultaneously or only front_addon_id filled at invoice_items", order_to_cash: null})
+                          continue;
+                      }
+                    } else if (invoice.invoice_items.invoice_items[0].front_product_id != null) {
+                      const productfromtoversion = await mysql.query('SELECT * FROM product_from_to_version WHERE country = ? AND product_from_to_origin_system = ? AND product_from_to_operation = ? AND product_from_to_front_product_id = ? ORDER BY created_at DESC', [header.country, header.origin_system, header.operation, invoice.invoice_items.invoice_items[0].front_product_id]);
+                      otc.otc.productfromtoversion = productfromtoversion;
+                      if (productfromtoversion.length > 0) {
+                          const planfromtoversion = await mysql.query('SELECT * FROM plan_from_to_version WHERE country = ? AND plan_from_to_origin_system = ? AND plan_from_to_operation = ? AND plan_from_to_front_plan_id = ? ORDER BY created_at DESC', [header.country, header.origin_system, header.operation, invoice.invoice_items.invoice_items[0].front_plan_id]);
+                          otc.otc.planfromtoversion = planfromtoversion;
+                          if (planfromtoversion.length < 1) {
+                          returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 4, message: "The front_plan_id " +  invoice.invoice_items.invoice_items[0].front_plan_id + " sent doesn't exist at oic_db for " + header.origin_system + " and " + header.operation + ". Please talk to ERP Team !", order_to_cash: null})
+                          continue;
+                          } 
+                          //do transaction
+                          let returnPersistent = await gravaOTCnobanco(otc);
+                          if (returnPersistent) {
+                          delete otc.otc.minifactu;
+                          delete otc.otc.orgfromtoversion;
+                          delete otc.otc.productfromtoversion;
+                          delete otc.otc.planfromtoversion;
+                          console.log(header.minifactu_id + ' - db insert success');
+                          returned.success.push({ minifactu_id: header.minifactu_id, type: "success", return_code: 1, message: "The order to cash transaction was added to oic_db successfully!", order_to_cash: otc})
+                          } else {
+                          console.log(header.minifactu_id + ' - db insert fail');
+                          returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 99, message: "Error on database persistance! Please check logs!", order_to_cash: otc})
+                          throw new Error('Error on database persistance! Please check logs');
+                          }
+                          //do transaction
+                      } else {
+                          returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 3, message: "The front_product_id " +  invoice.invoice_items.invoice_items[0].front_product_id + " sent doesn't exist at oic_db for " + header.origin_system + " and " + header.operation + ". Please talk to ERP Team !", order_to_cash: null})
+                          continue;
+                      }
+                    } else {
+                      returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 9, message: "Order to cash transactions from " +  header.origin_system + " must have front_product_id and front_plan_id simultaneously or only front_addon_id filled at invoice_items", order_to_cash: null})
+                      continue;
+                    }
+                } else {
+                  returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 2, message: "The unity_identification sent " + header.unity_identification + " doesn't exist at oic_db. Please talk to ERP Team !", order_to_cash: null})
+                  continue;
+                }
             }
           }
       } else {
