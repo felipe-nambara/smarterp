@@ -227,12 +227,15 @@ module.exports = app => {
           if (!header.minifactu_id || header.minifactu_id == "") {
             var message = "Missing node otc.header.minifactu_id at Json request !";
             var return_code = 1;
-            returned.error.push({ message: message, return_code: return_code, type: "error", otc: otc })
+            console.log(message);
+            returned.error.push({ message: message, return_code: return_code, type: "error", otc: otc });
           } else {
             const minifactu = await mysql.query('SELECT * FROM order_to_cash WHERE minifactu_id = ?', [header.minifactu_id]);
+            console.log(minifactu);
             otc.otc.minifactu = minifactu; 
             if (minifactu.length > 0) {
               if (minifactu.erp_receivable_status_transaction == "error_at_trying_to_process" || minifactu.erp_receivable_status_transaction == "error_trying_to_create_at_erp" || minifactu.erp_invoice_status_transaction == "error_trying_to_create_at_erp" || minifactu.erp_invoice_customer_status_transaction == "error_trying_to_create_at_erp")  {
+                  console.log('The order to cash transaction was already added to oic_db - ' + minifactu);
                   returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 6, message: "The order to cash transaction was already added to oic_db !", order_to_cash: minifactu})
                   continue;
               }
@@ -355,11 +358,15 @@ module.exports = app => {
                   continue;
                 }
               }
+            } else {
+              console.log('The order to cash transaction not exists on oic_db - ' + header.minifactu_id);
+              returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 98, message: "The order to cash transaction not exists on oic_db!", order_to_cash: header.minifactu_id})
+              continue;
             }
           }
       } else {
         let status = 422;
-        let message = "The request sent was not well formmated. Check at https://app.swaggerhub.com/apis-docs/Smartfit/OrderToCash/";
+        let message = "The request sent was not well formated. Check at https://app.swaggerhub.com/apis-docs/Smartfit/OrderToCash/";
         console.log(`[${status}] - ${message}`);
         returned.error.push({
           message: message,

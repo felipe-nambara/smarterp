@@ -1,8 +1,8 @@
-service: ms-smartfit
+service: ms-oic-smartfit
 
 provider:
   name: aws
-  runtime: nodejs12.x
+  runtime: nodejs10.x
   stage: v1
   region: us-east-1
   timeout: 30
@@ -16,7 +16,7 @@ provider:
       - subnet-9ef492e9
       - subnet-65eb444e
   environment:
-    APPLICATION_NAME: ms-smartfit
+    APPLICATION_NAME: ms-oic-smartfit
   package:
     excludeDevDependencies: true
     exclude:
@@ -25,7 +25,7 @@ provider:
 
 functions:
   app: 
-    name: ms-smartfit
+    name: ms-oic-smartfit
     handler: handler.run
     events:
       - http:

@@ -8,6 +8,7 @@
     "deploy-prod": "serverless deploy -v --aws-profile smartfit-prod",
     "deploy-dev": "serverless deploy -v --aws-profile smartfit-dev",
     "remove-dev": "serverless remove --aws-profile smartfit-dev",
+    "remove-prod": "serverless remove --aws-profile smartfit-prod",
     "logs-dev": "serverless logs -f app -t --aws-profile smartfit-dev",
     "logs-prod": "serverless logs -f app -t --aws-profile smartfit-prod"
   },
