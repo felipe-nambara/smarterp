@@ -230,7 +230,8 @@ module.exports = app => {
         if (minifactu.length > 0) {
           if (minifactu[0].erp_invoice_customer_status_transaction != "error_trying_to_create_at_erp" || minifactu[0].erp_receivable_status_transaction != "error_at_trying_to_process" || minifactu[0].erp_receivable_status_transaction != "error_trying_to_create_at_erp" || minifactu[0].erp_invoice_status_transaction != "error_trying_to_create_at_erp") {
             console.log('The order to cash transaction was already added to oic_db - ' + JSON.stringify(minifactu));
-            returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 6, message: "The order to cash transaction was already added to oic_db !", order_to_cash: minifactu })
+            let responseotc = { "id": minifactu[0].id, "created_at": minifactu[0].created_at, "erp_invoice_customer_status_transaction": minifactu[0].erp_invoice_customer_status_transaction, "erp_receivable_status_transaction": minifactu[0].erp_receivable_status_transaction, "erp_invoice_status_transaction": minifactu[0].erp_invoice_status_transaction };
+            returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 6, message: "The order to cash transaction was already added to oic_db !", order_to_cash: responseotc })
             continue;
           }
         }
