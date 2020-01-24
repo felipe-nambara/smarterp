@@ -109,8 +109,8 @@ async function gravaOTCnobanco(otc) {
       ]
     })
     .query((r) => {
-      for (let indexit = 0; indexit < invoice.invoice_items.length; indexit++) {
-        const it = invoice.invoice_items[indexit];
+      for (let indexit = 0; indexit < invoice.invoice_items.invoice_items.length; indexit++) {
+        const it = invoice.invoice_items.invoice_items[indexit];
 
         return [
           "INSERT INTO invoice_items(id_invoice,front_product_id,front_plan_id,front_addon_id,quantity,list_price,sale_price) VALUES (?,?,?,?,?,?,?);",
@@ -224,11 +224,11 @@ module.exports = app => {
       if (schema.isValidSync(otc)) {
         const { header, invoice_customer, receivable, invoice } = otc.otc;
 
-        const minifactu = await mysql.query('SELECT * FROM order_to_cash WHERE minifactu_id = ?', [header.minifactu_id]);
+        const minifactu = await mysql.query('SELECT * FROM order_to_cash WHERE minifactu_id = ? ORDER BY created_at ASC', [header.minifactu_id]);
         otc.otc.minifactu = minifactu;
 
         if (minifactu.length > 0) {
-          if (minifactu.erp_receivable_status_transaction != "error_at_trying_to_process" || minifactu.erp_receivable_status_transaction != "error_trying_to_create_at_erp" || minifactu.erp_invoice_status_transaction != "error_trying_to_create_at_erp" || minifactu.erp_invoice_customer_status_transaction != "error_trying_to_create_at_erp") {
+          if (minifactu[0].erp_invoice_customer_status_transaction != "error_trying_to_create_at_erp" || minifactu[0].erp_receivable_status_transaction != "error_at_trying_to_process" || minifactu[0].erp_receivable_status_transaction != "error_trying_to_create_at_erp" || minifactu[0].erp_invoice_status_transaction != "error_trying_to_create_at_erp") {
             console.log('The order to cash transaction was already added to oic_db - ' + JSON.stringify(minifactu));
             returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 6, message: "The order to cash transaction was already added to oic_db !", order_to_cash: minifactu })
             continue;
@@ -317,14 +317,15 @@ module.exports = app => {
 
         //do transaction
         let returnPersistent = await gravaOTCnobanco(otc);
-
         if (returnPersistent) {
           delete otc.otc.minifactu;
           delete otc.otc.orgfromtoversion;
           delete otc.otc.productfromtoversion;
           delete otc.otc.planfromtoversion;
-          console.log(header.minifactu_id + ' - db insert success');
-          returned.success.push({ minifactu_id: header.minifactu_id, type: "success", return_code: 1, message: "The order to cash transaction was added to oic_db successfully!", order_to_cash: otc })
+          console.log(header.minifactu_id + ' - db insert success - Object: ' + JSON.stringify(otc));
+          const minifactu = await mysql.query('SELECT * FROM order_to_cash WHERE minifactu_id = ? ORDER BY created_at DESC', [otc.otc.header.minifactu_id]);
+          let responseotc = { "id": minifactu[0].id, "created_at": minifactu[0].created_at, "erp_invoice_customer_status_transaction": minifactu[0].erp_invoice_customer_status_transaction, "erp_receivable_status_transaction": minifactu[0].erp_receivable_status_transaction, "erp_invoice_status_transaction": minifactu[0].erp_invoice_status_transaction };
+          returned.success.push({ minifactu_id: header.minifactu_id, type: "success", return_code: 1, message: "The order to cash transaction was added to oic_db successfully!", order_to_cash: responseotc })
         } else {
           console.log(header.minifactu_id + ' - db insert fail');
           returned.error.push({ minifactu_id: header.minifactu_id, type: "error", return_code: 99, message: "Error on database persistance! Please check logs!", order_to_cash: otc })
