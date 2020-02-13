@@ -1,9 +1,8 @@
-drop procedure if exists sp_valid_object_refund; 
-delimiter //
+drop procedure if exists sp_valid_object_refund;
 
-create procedure sp_valid_object_refund( p_refund JSON ,out p_return boolean ,out p_code integer ,out p_message varbinary(5000), out p_front_refund_id integer)
-
-begin   
+DELIMITER $$
+CREATE DEFINER=`admin`@`%` PROCEDURE `sp_valid_object_refund`( p_refund JSON ,out p_return boolean ,out p_code integer ,out p_message varbinary(5000), out p_front_refund_id integer)
+begin
 
     set p_return = true;
     set p_code = 0;
@@ -33,7 +32,7 @@ begin
         set p_return = false;
         set p_code = 1;
         set p_message = concat(p_message,"Missing node refund.header.country at Json request ! ");
-    end if;    
+    end if;
     
     if json_contains_path(p_refund,'one','$.refund.header.unity_identification') = 0 then
         set p_return = false;
@@ -53,11 +52,20 @@ begin
         set p_message = concat(p_message,"Missing node refund.header.refund_requester_name at Json request ! ");
     end if;                    
     
+    
     if json_contains_path(p_refund,'one','$.refund.header.refund_requester_identification') = 0 then
         set p_return = false;
         set p_code = 1;
         set p_message = concat(p_message,"Missing node refund.header.refund_requester_identification at Json request ! ");
-    end if;                        
+		
+	else
+		set @p_refund_requester_identification = cast(json_extract(p_refund,'$.refund.header.refund_requester_identification') as unsigned);
+		if @p_refund_requester_identification = "" then
+			set p_return = false;
+			set p_code = 1;
+			set p_message = concat(p_message,"Missing node refund.header.refund_requester_identification at Json request ! ");
+		end if;
+    end if;       
     
     if json_contains_path(p_refund,'one','$.refund.header.issue_date') = 0 then
         set p_return = false;
@@ -107,5 +115,6 @@ begin
         set p_message = concat(p_message,"Missing node refund.header.bank_account_owner_identification at Json request ! ");
     end if;
     
-end;
-//
+    
+end$$
+DELIMITER ;
