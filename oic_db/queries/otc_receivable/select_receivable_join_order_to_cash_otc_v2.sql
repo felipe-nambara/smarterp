@@ -287,7 +287,7 @@ group by otc.erp_business_unit
 
 ) as t1
 
-where t1.erp_clustered_receivable_id in ( select erp_clustered_receivable_id from integration_clustered_receivable where keycontrol = 154 )
+-- where t1.erp_clustered_receivable_id in ( select erp_clustered_receivable_id from integration_clustered_receivable where keycontrol = ### )
 
 order by t1.erp_business_unit
 		,t1.erp_clustered_receivable_id
