@@ -66,6 +66,7 @@ and recg.origin_system = otc.origin_system
 and recg.operation = otc.operation
 and recg.transaction_type = rec.transaction_type
 and recg.converted_smartfin = rec.converted_smartfin
+and recg.erp_business_unit = otc.erp_business_unit
 and recg.memoline_setting = 'gross_value'
 
 where otc.country = 'Brazil' -- Integração em paralalo por operação do país
