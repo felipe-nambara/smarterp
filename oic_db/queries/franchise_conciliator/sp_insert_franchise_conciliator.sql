@@ -10,6 +10,7 @@ begin
     declare v_otc_front_franchise_conciliator_id integer; -- Neste campo será gravado o front id vindo do JSON
     declare v_otc_issue_date integer default null;
     declare v_otc_due_date integer default null;
+    declare v_customer_identification_financial_responsible varchar(45);
     declare v_receivable_erp_receivable_customer_id varchar(45);
     declare v_receivable_contract_number varchar(45);
     declare v_receivable_credit_card_brand varchar(45);
@@ -70,9 +71,9 @@ if ( @p_return_v2 ) then -- if 1
 	select replace(replace(json_extract(p_franchine_conciliator,'$.franchise_conciliator.header.front_franchise_conciliator_id'),'"',""),"null",null) into @v_otc_front_franchise_conciliator_id;
 	select replace(replace(json_extract(p_franchine_conciliator,'$.franchise_conciliator.header.origin_system'),'"',""),"null",null) into @v_otc_origin_system;
 	select replace(replace(json_extract(p_franchine_conciliator,'$.franchise_conciliator.header.operation'),'"',""),"null",null) into @v_otc_operation;
-  select replace(replace(json_extract(p_franchine_conciliator,'$.franchise_conciliator.header.issue_date'),'"',""),"null",null) into @v_otc_issue_date;
+	select replace(replace(json_extract(p_franchine_conciliator,'$.franchise_conciliator.header.issue_date'),'"',""),"null",null) into @v_otc_issue_date;
 	select replace(replace(json_extract(p_franchine_conciliator,'$.franchise_conciliator.header.due_date'),'"',""),"null",null) into @v_otc_due_date;
-	select replace(replace(json_extract(p_franchine_conciliator,'$.franchise_conciliator.receivable.erp_receivable_customer_identification'),'"',""),"null",null) into @v_receivable_erp_receivable_customer_id;
+	select replace(replace(json_extract(p_franchine_conciliator,'$.franchise_conciliator.receivable.erp_receivable_customer_identification'),'"',""),"null",null) into @v_customer_identification_financial_responsible;
 	select replace(replace(json_extract(p_franchine_conciliator,'$.franchise_conciliator.receivable.contract_number'),'"',""),"null",null) into @v_receivable_contract_number;
 	select replace(replace(json_extract(p_franchine_conciliator,'$.franchise_conciliator.receivable.credit_card_brand'),'"',""),"null",null) into @v_receivable_credit_card_brand;
 	select cast(replace(json_extract(p_franchine_conciliator,'$.franchise_conciliator.receivable.gross_value'),"null",null) as unsigned) into @v_receivable_gross_value;
@@ -135,8 +136,15 @@ if ( @p_return_v2 ) then -- if 1
 
 
 			if ( @v_oftv_erp_business_unit is not null ) then -- If 3
-            
-				if (  select exists ( select erp_customer_id from customer where identification_financial_responsible = @v_receivable_erp_receivable_customer_id) ) then -- if 4
+				
+                select 
+					erp_customer_id
+					into @v_receivable_erp_receivable_customer_id
+                from customer 
+                where identification_financial_responsible = @v_customer_identification_financial_responsible;
+                
+				if (  @v_receivable_erp_receivable_customer_id is not null ) then -- if 4
+                
 					insert into order_to_cash
 							(country,
 							unity_identification,
@@ -181,7 +189,6 @@ if ( @p_return_v2 ) then -- if 1
 							@v_oftv_to_generate_receivable, -- to_generate_receivable
 							@v_oftv_to_generate_invoice, -- to_generate_invoice
 							@v_otc_origin_system, -- origin_system
-							@v_otc_operation, -- operation
 							'franchise_conciliator', -- operation
 							null, -- minifactu_id
 							null, -- conciliator_id
@@ -193,7 +200,7 @@ if ( @p_return_v2 ) then -- if 1
 							null, -- erp_invoice_customer_log
 							null, -- erp_receivable_sent_to_erp_at
 							null, -- erp_receivable_returned_from_erp_at
-							@p_order_to_cash_erp_receivable_customer_identification, -- erp_receivable_customer_identification
+							@v_customer_identification_financial_responsible, -- erp_receivable_customer_identification
 							'waiting_to_be_process', -- erp_receivable_status_transaction
 							null, -- erp_receivable_log
 							null, -- erp_invoice_send_to_erp_at
@@ -251,9 +258,9 @@ if ( @p_return_v2 ) then -- if 1
 							(@v_otc_id, -- order_to_cash_id
 							null, -- erp_receivable_id
 							null, -- erp_receipt_id
-							null, -- erp_receivable_customer_id
+							@v_receivable_erp_receivable_customer_id, -- erp_receivable_customer_id
 							null, -- erp_clustered_receivable_id
-							null, -- erp_clustered_receivable_customer_id
+							@v_receivable_erp_receivable_customer_id, -- erp_clustered_receivable_customer_id
 							'yes', -- is_smartfin
 							'no', -- converted_smartfin
 							'franchise', -- type_smartfin
@@ -416,7 +423,7 @@ if ( @p_return_v2 ) then -- if 1
 					commit;
 					set p_return = true;
 					set p_code = 0;
-					set p_message = concat("The franchise Conciliator transaction was added to oic_db successfully. Id: ", ifnull(@v_otc_id,"null"), " at Json request !");
+					set p_message = concat("The franchise Conciliator transaction was added to oic_db successfully. Id: ", ifnull(@v_otc_id,"null"), " !");
 					set p_front_franchise_conciliator_id = @v_otc_front_franchise_conciliator_id;
 					end if;
 
@@ -424,7 +431,7 @@ if ( @p_return_v2 ) then -- if 1
 				rollback;
 				set p_return = false;
 				set p_code = 4;
-				set p_message = concat("The Receivable Customer Identification sent  ", ifnull(@v_receivable_erp_receivable_customer_id, "null") ," doesn't exist at oic_db. Please talk to ERP Team !");
+				set p_message = concat("The Receivable Customer Identification sent  ", ifnull(@v_customer_identification_financial_responsible, "null") ," doesn't exist at oic_db. Please talk to ERP Team !");
 				set p_front_franchise_conciliator_id = @v_otc_front_franchise_conciliator_id;
 				end if; -- If 4
 
