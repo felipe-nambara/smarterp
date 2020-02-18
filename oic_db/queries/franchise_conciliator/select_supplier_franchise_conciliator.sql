@@ -42,6 +42,7 @@ on recg.country = otc.country
 and recg.origin_system = otc.origin_system
 and recg.operation = otc.operation
 and recg.transaction_type = rec.transaction_type
+and recg.erp_business_unit = otc.erp_business_unit
 and recg.memoline_setting = 'gross_value'
 
 left join receipt_from_to_version rftv
@@ -65,5 +66,4 @@ where otc.country = 'Brazil' -- Integração em paralalo por operação do país
 and otc.erp_subsidiary = 'BR020001' -- Neste caso a filial deve ser fixa
 and otc.origin_system = 'smartsystem' -- Integração em paralalo por origem (SmartFit, BioRitmo, etc...)
 and otc.operation = 'franchise_conciliator' -- Integração em paralalo por operação (plano de alunos, plano corporativo, etc...)
-and sup.erp_supplier_id is null
-and rec.transaction_type = 'credit_card_recurring' ;-- Integração em paralalo por tipo de transação (Cartão de crédito recorrente, cartão de débito recorrente, débito em conta, boleto etc...)
+and sup.erp_supplier_id is null;-- Integração em paralalo por tipo de transação (Cartão de crédito recorrente, cartão de débito recorrente, débito em conta, boleto etc...)

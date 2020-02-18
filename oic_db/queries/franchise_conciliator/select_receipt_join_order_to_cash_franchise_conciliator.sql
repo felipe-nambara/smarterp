@@ -37,6 +37,7 @@ on recg.country = otc.country
 and recg.origin_system = otc.origin_system
 and recg.operation = otc.operation
 and recg.transaction_type = rec.transaction_type
+and recg.erp_business_unit = otc.erp_business_unit
 and recg.memoline_setting = 'gross_value'
 
 left join receipt_from_to_version rftv

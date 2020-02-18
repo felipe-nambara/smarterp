@@ -36,7 +36,7 @@ where otc.country = 'Brazil' -- Integração em paralalo por operação do país
 and otc.erp_subsidiary = 'BR020001' -- Neste caso fixar esse valor para a integração de conciliador de franquias
 and otc.origin_system = 'smartsystem' -- Integração em paralalo por origem (SmartFit, BioRitmo, etc...)
 and otc.operation = 'franchise_conciliator' -- Neste caso fixar esse valor para a integração de conciliador de franquias
-and rec.transaction_type = 'credit_card_recurring' -- Integração em paralalo por tipo de transação (Cartão de crédito recorrente, cartão de débito recorrente, débito em conta, boleto etc...)
+and rec.transaction_type = 'boleto' -- Integração em paralalo por tipo de transação (Cartão de crédito recorrente, cartão de débito recorrente, débito em conta, boleto etc...)
 and rec.erp_receivable_id is not null
 and rec.erp_receipt_id is not null
 and pay.erp_supplier_id is not null
