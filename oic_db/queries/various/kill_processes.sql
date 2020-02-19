@@ -1,0 +1,1 @@
+select GROUP_CONCAT(stat SEPARATOR ' ') from (select concat('KILL ',id,';') as stat from information_schema.processlist where Time > 3000) as stats ;
