@@ -21,7 +21,7 @@ select
     ,if(month(ref.issue_date)=month(current_date()),ref.issue_date,current_date()) as erp_gl_date
 from refund ref
 
-inner join refund_erp_configurations recg
+left join refund_erp_configurations recg
 on  recg.country = ref.country
 and recg.origin_system = ref.origin_system
 and recg.operation = ref.operation
@@ -30,4 +30,5 @@ where ref.country = 'Brazil' -- Integração em paralalo por operação do país
 and ref.erp_subsidiary = 'BR010001' -- Filtro por filial (loop automático)
 and ref.origin_system = 'smartsystem' -- Integração em paralalo por origem (SmartFit, BioRitmo, etc...)
 and ref.operation = 'person_plan' -- Neste caso filtrar somente person_plan, pois a operação de refund só ocorre para os planos de alunos
+and ref.id = 1528
 and ref.erp_refund_status_transaction = 'waiting_to_be_process';

@@ -63,7 +63,7 @@ begin
 		select replace(replace(json_extract(p_refund,'$.refund.header.refund_requester_identification'),'"',""),"null",null)  into @p_refund_requester_identification;
 		select replace(replace(json_extract(p_refund,'$.refund.header.issue_date'),'"',""),"null",null)  into @p_refund_issue_date;
 		select replace(replace(json_extract(p_refund,'$.refund.header.due_date'),'"',""),"null",null)  into @p_refund_due_date;
-		select cast(replace(json_extract(p_refund,'$.refund.header.refund_value'),"null",null) as unsigned) into @p_refund_refund_value;
+		select cast(replace(json_extract(p_refund,'$.refund.header.refund_value'),"null",null) as decimal(18,4) ) into @p_refund_refund_value;
 		select replace(replace(json_extract(p_refund,'$.refund.header.bank_number'),'"',""),"null",null)  into @p_refund_bank_number;         
 		select replace(replace(json_extract(p_refund,'$.refund.header.bank_branch'),'"',""),"null",null)  into @p_refund_bank_branch;
 		select replace(replace(json_extract(p_refund,'$.refund.header.bank_branch_digit'),'"',""),"null",null)  into @p_refund_bank_branch_digit;
