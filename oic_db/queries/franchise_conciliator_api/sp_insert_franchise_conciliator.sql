@@ -76,7 +76,7 @@ if ( @p_return_v2 ) then -- if 1
 	select replace(replace(json_extract(p_franchine_conciliator,'$.franchise_conciliator.receivable.erp_receivable_customer_identification'),'"',""),"null",null) into @v_customer_identification_financial_responsible;
 	select replace(replace(json_extract(p_franchine_conciliator,'$.franchise_conciliator.receivable.contract_number'),'"',""),"null",null) into @v_receivable_contract_number;
 	select replace(replace(json_extract(p_franchine_conciliator,'$.franchise_conciliator.receivable.credit_card_brand'),'"',""),"null",null) into @v_receivable_credit_card_brand;
-	select cast(replace(json_extract(p_franchine_conciliator,'$.franchise_conciliator.receivable.gross_value'),"null",null) as unsigned) into @v_receivable_gross_value;
+	select cast(replace(json_extract(p_franchine_conciliator,'$.franchise_conciliator.receivable.gross_value'),"null",null) as decimal(18,4) ) into @v_receivable_gross_value;
 	select replace(replace(json_extract(p_franchine_conciliator,'$.franchise_conciliator.supplier.full_name'),'"',""),"null",null) into @v_supplier_full_name;
 	select replace(replace(json_extract(p_franchine_conciliator,'$.franchise_conciliator.supplier.type_person'),'"',""),"null",null) into @v_supplier_type_person;
 	select replace(replace(json_extract(p_franchine_conciliator,'$.franchise_conciliator.supplier.identification_financial_responsible'),'"',""),"null",null) into @v_suplier_identification_financial_responsible;
