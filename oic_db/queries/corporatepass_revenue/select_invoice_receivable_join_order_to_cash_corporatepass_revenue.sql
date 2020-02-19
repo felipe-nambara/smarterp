@@ -10,6 +10,10 @@ select
     ,iec.erp_set_of_books_id    
     ,iec.erp_product_category_fiscal
     ,iec.erp_attribute_category
+    ,iec.erp_fiscal_serie
+    ,iec.erp_fiscal_service_situation
+    ,oftv.fiscal_municipal_identification
+    ,oftv.erp_legal_report_unit    
     ,iec.warehouse_id
     ,iec.erp_receipt_method
     ,otc.id as id_otc-- id da order_to_cash
@@ -55,6 +59,19 @@ and iec.erp_legal_entity = otc.erp_legal_entity
 and iec.erp_subsidiary = otc.erp_subsidiary
 and iec.origin_system = otc.origin_system
 and iec.operation = otc.operation
+
+inner join organization_from_to_version oftv
+on oftv.erp_business_unit = otc.erp_business_unit
+and oftv.erp_legal_entity = otc.erp_legal_entity
+and oftv.erp_subsidiary = otc.erp_subsidiary
+and oftv.created_at = 	(
+							select
+								max(oftv_v2.created_at) as created_at
+							from organization_from_to_version oftv_v2
+                            where oftv_v2.erp_business_unit = oftv.erp_business_unit
+                            and oftv_v2.erp_legal_entity = oftv.erp_legal_entity
+                            and oftv_v2.erp_subsidiary = oftv.erp_subsidiary
+						)
 
 where otc.country = 'Brazil' -- Integração em paralelo por operação do país
 and otc.erp_subsidiary = 'BR010001' -- Neste caso fixar sempre a subisdiary BR010001
