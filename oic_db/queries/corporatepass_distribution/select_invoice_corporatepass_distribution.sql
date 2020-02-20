@@ -55,6 +55,7 @@ and iec.erp_legal_entity = otc.erp_legal_entity
 and iec.erp_subsidiary = otc.erp_subsidiary
 and iec.origin_system = otc.origin_system
 and iec.operation = otc.operation
+and iec.to_generate_fiscal_document = 'yes'
 
 inner join organization_from_to_version oftv
 on oftv.erp_business_unit = otc.erp_business_unit
@@ -70,7 +71,7 @@ and oftv.created_at = 	(
 						)
 
 where otc.country = 'Brazil' -- Integração em paralelo por operação do país
-and otc.erp_subsidiary = 'BR020001' -- Filtro por filial (loop automático)
+and otc.erp_subsidiary = 'BR010305' -- Filtro por filial (loop automático)
 and otc.origin_system = 'corporatepass' -- Integração em paralelo por origem (SmartFit, BioRitmo, etc...)
 and otc.operation = 'distribution' -- Integração em paralelo por origem (SmartFit, BioRitmo, etc...)
 and otc.to_generate_invoice = 'yes'
