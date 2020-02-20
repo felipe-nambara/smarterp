@@ -33,7 +33,7 @@ cpr.erp_receipt_status_transaction
              )
 		)
          
-	) as transaction_type
+	) as payment_method
     ,cus.full_name
 from conciliated_payed_receivable cpr
 
@@ -58,6 +58,7 @@ and rec.erp_receivable_id is not null
 and cpr.erp_receipt_status_transaction = 'waiting_to_be_process'
 and cpr.erp_receipt_id is null
 and cpr.conciliation_type = 'PCV'
+-- and rec.conciliator_id in ('1256940585','1256940558','1256940691')
 
 group by rec.erp_receivable_id; -- Considerar somente os retornos de comprovante de recebimento enviado pela conciliadora
 
