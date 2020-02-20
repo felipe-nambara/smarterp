@@ -74,6 +74,7 @@ and otc.erp_subsidiary = 'BR020001' -- Neste caso a filial deve ser fixa - Smart
 and otc.origin_system = 'smartsystem' -- Integração em paralalo por origem (SmartFit, BioRitmo, etc...)
 and otc.operation = 'franchise_conciliator' -- Integração em paralalo por operação (plano de alunos, plano corporativo, etc...)
 and otc.to_generate_receivable = 'yes'
+and otc.erp_receivable_status_transaction = 'waiting_to_be_process' -- Filtrar somente os registros que ainda não foram integrados com o erp e estão aguardando processamento
 and rec.erp_clustered_receivable_customer_id is not null -- Filtrar somente os receivables que possui relacionamento com a customer 
 and rec.erp_receivable_id is null -- Filtrar somente os receivables que ainda não foram integrados com o erp
 and rec.transaction_type = 'boleto' -- Integração em paralalo por tipo de transação (Cartão de crédito recorrente, cartão de débito recorrente, débito em conta, boleto etc...)
