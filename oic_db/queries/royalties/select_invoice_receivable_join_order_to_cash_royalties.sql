@@ -49,6 +49,7 @@ and iec.erp_legal_entity = otc.erp_legal_entity
 and iec.erp_subsidiary = otc.erp_subsidiary
 and iec.origin_system = otc.origin_system
 and iec.operation = otc.operation
+and iec.to_generate_fiscal_document = 'yes'
 
 where otc.country = 'Brazil' -- Integração em paralelo por operação do país
 and otc.erp_subsidiary = 'BR030001' -- No caso de Roaylties sempre será essa filial (Franqueadora)
