@@ -62,31 +62,8 @@ select concat("before: ",current_timestamp());
 set @v_keycontrol 	:= concat_ws('_','clus_rec',left(rtrim(p_country),2),left(rtrim(p_origin_system),2),left(rtrim(p_operation),2),left(rtrim(p_transaction_type),2));
 set @v_created_at	:= current_timestamp;
 
--- select "teste";
-
- -- select @v_keycontrol;
-
 if get_lock(@v_keycontrol,1) = 1 then 
 	
-    -- select "teste2";
-    
-    -- select p_country,p_origin_system,p_operation,p_transaction_type;
-    
-    /*
-	select * from vw_clustered_receivable 
-						where country = p_country 
-                        and origin_system = p_origin_system 
-                        and operation = p_operation
-                        and transaction_type = p_transaction_type 
-                        order by country
-								,origin_system
-                                ,operation
-                                ,transaction_type
-                                ,billing_date;    	
-	*/
-	
-    -- select "teste3";
-    
 	if ( select not exists(
 							select 
 								1 
@@ -102,8 +79,6 @@ if get_lock(@v_keycontrol,1) = 1 then
     
     set done = 0;
     open cur1;
-    
-    -- select "teste4";
     
     ClusteredReceivableLoop: loop
         fetch cur1 into  v_country
@@ -128,29 +103,6 @@ if get_lock(@v_keycontrol,1) = 1 then
 		if done = 1 then leave ClusteredReceivableLoop; end if;
 	      
         start transaction;
-        
-		/*
-        select v_country
-						,v_origin_system
-						,v_unity_identification
-						,v_erp_business_unit
-                        ,v_erp_legal_entity
-                        ,v_erp_subsidiary
-                        ,v_operation
-                        ,v_erp_customer_id
-                        ,v_fullname
-                        ,v_transaction_type
-                        ,v_credit_card_brand
-                        ,v_contract_number
-                        ,v_administration_tax_percentage
-                        ,v_antecipation_tax_percentage
-                        ,v_billing_date
-                        ,v_credit_date
-                        ,v_is_smarftin;
-		*/
-		
-        -- select "teste5";
-			
         
         insert into control_clustered_receivable 
 								select 
@@ -202,18 +154,8 @@ if get_lock(@v_keycontrol,1) = 1 then
                                         
                                         limit p_limit ;											
 		
-        -- select "teste6";
-		-- commit;
-		-- select "teste2";
-        
-        -- select id from control_clustered_receivable where keycontrol = @v_keycontrol and created_at = @v_created_at;
-        
 		if exists ( select id from control_clustered_receivable where keycontrol = @v_keycontrol and created_at = @v_created_at order by id limit 1)  then 
-			
-            -- select "teste7";
-            
-            -- select count(1) from control_clustered_receivable where keycontrol = @v_keycontrol and created_at = @v_created_at;
-            
+			            
 			update order_to_cash 
 			
 			inner join receivable
@@ -223,8 +165,6 @@ if get_lock(@v_keycontrol,1) = 1 then
 			
 			where order_to_cash.id in ( select id from control_clustered_receivable where keycontrol = @v_keycontrol and created_at = @v_created_at);
 			
-            -- select "teste8";
-            
 			select 	
 				 round(sum(receivable.gross_value),2) as gross_value
 				,round(sum(receivable.price_list_value),2) as price_list_value
@@ -250,18 +190,6 @@ if get_lock(@v_keycontrol,1) = 1 then
 			where order_to_cash.id in ( select id from control_clustered_receivable where keycontrol = @v_keycontrol and created_at = @v_created_at)
 			and order_to_cash.erp_receivable_status_transaction = 'clustered_receivable_being_created' ;			
 			
-            -- select "teste9";
-            
-            /*
-            select @v_gross_value
-					,@v_price_list_value
-					,@v_net_value
-					,@v_interest_value
-					,@v_administration_tax_value
-					,@v_antecipation_tax_value
-					,@v_qtd_of_receivable;
-			*/
-            
 			insert into clustered_receivable
 								(country,
 								unity_identification,
@@ -304,9 +232,7 @@ if get_lock(@v_keycontrol,1) = 1 then
 								v_antecipation_tax_percentage,
 								@v_antecipation_tax_value,
 								@v_qtd_of_receivable);
-			
-            -- select "teste10";
-            
+			     
 			set @clustered_receivable_id = last_insert_id();
 			
 			update receivable
@@ -319,16 +245,13 @@ if get_lock(@v_keycontrol,1) = 1 then
 
 			where order_to_cash.id in ( select id from control_clustered_receivable where keycontrol = @v_keycontrol and created_at = @v_created_at)
 			and order_to_cash.erp_receivable_status_transaction = 'clustered_receivable_being_created' ;        
-            
-            -- select "teste11";
-        
+
         end if;
         
         delete from control_clustered_receivable where keycontrol = @v_keycontrol and created_at = @v_created_at;
         
         commit;
-        -- select "teste12";
-        
+
     end loop ClusteredReceivableLoop;
     
     close cur1;	
