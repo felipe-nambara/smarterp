@@ -89,7 +89,14 @@ begin
     declare p_return_v3 boolean;
     declare p_code_v3 boolean;
     declare p_message_v3 varbinary(10000);
-    declare p_minifactu_id_v3 integer;
+    declare p_minifactu_id_v3 integer;    
+    declare p_erp_invoice_customer_status_transaction varchar(255);
+    declare p_erp_receivable_status_transaction varchar(255);
+    declare p_erp_invoice_status_transaction varchar(255);
+    declare p_chk_ivc_status integer;
+    declare p_chk_rec_status integer;
+    declare p_chk_inv_status integer;
+    
     declare i int default 0;	
 	declare exit handler for sqlexception     
 	begin
@@ -179,6 +186,12 @@ begin
             set @v_to_generate_customer = null;
             set @v_to_generate_receivable = null;
             set @v_to_generate_invoice = null;
+            set @p_erp_invoice_customer_status_transaction = null;
+            set @p_erp_receivable_status_transaction = null;
+            set @p_erp_invoice_status_transaction = null;
+            set @p_chk_ivc_status = null;
+            set @p_chk_rec_status = null;
+            set @p_chk_inv_status = null;
             
 			select
 				 oftv.erp_business_unit
@@ -226,7 +239,52 @@ begin
 									
 				if 	( 	( @p_order_to_cash_operation not in ('person_plan') and @p_order_to_cash_erp_receivable_customer_identification is null ) /*só é permitido enviar esse atributo nulo quando a operação não for person_plan (plano de aluno b2c)*/
 				or 		( @v_erp_receivable_customer_id is not null )	) then /*caso contrário é obrigatório*/ 	 	
-					
+					                    
+                    select
+						otc.id 
+						into @p_chk_ivc_status
+                    from order_to_cash otc
+                    where otc.country = @p_order_to_cash_country
+                    and otc.unity_identification = @p_order_to_cash_unity_identification
+                    and otc.minifactu_id = @p_order_to_cash_minifactu_id
+                    and otc.erp_invoice_customer_status_transaction in ('created_at_erp');
+                    
+                    if ( @p_chk_ivc_status is null) then 
+						set @p_erp_invoice_customer_status_transaction = 'waiting_to_be_process';
+					else
+						set @p_erp_invoice_customer_status_transaction = 'doesnt_need_to_be_process';
+                    end if;
+
+                    select
+						otc.id 
+						into @p_chk_rec_status
+                    from order_to_cash otc
+                    where otc.country = @p_order_to_cash_country
+                    and otc.unity_identification = @p_order_to_cash_unity_identification
+                    and otc.minifactu_id = @p_order_to_cash_minifactu_id
+                    and otc.erp_receivable_status_transaction in ('clustered_receivable_created','created_at_erp');
+                    
+                    if ( @p_chk_rec_status is null) then 
+						set @p_erp_receivable_status_transaction = 'waiting_to_be_process';
+					else
+						set @p_erp_receivable_status_transaction = 'doesnt_need_to_be_process';
+                    end if;
+
+                    select
+						otc.id 
+						into @p_chk_inv_status
+                    from order_to_cash otc
+                    where otc.country = @p_order_to_cash_country
+                    and otc.unity_identification = @p_order_to_cash_unity_identification
+                    and otc.minifactu_id = @p_order_to_cash_minifactu_id
+                    and otc.erp_invoice_status_transaction in ('created_at_erp');
+                    
+                    if ( @p_chk_inv_status is null) then 
+						set @p_erp_invoice_status_transaction = 'waiting_to_be_process';
+					else
+						set @p_erp_invoice_status_transaction = 'doesnt_need_to_be_process';
+                    end if;
+
 					insert into order_to_cash
 									(country,
 									unity_identification,
@@ -278,16 +336,16 @@ begin
 									@p_order_to_cash_front_id, -- front_id
 									null, -- erp_invoice_customer_send_to_erp_at
 									null, -- erp_invoice_customer_returned_from_erp_at
-									'waiting_to_be_process', -- erp_invoice_customer_status_transaction
+									@p_erp_invoice_customer_status_transaction, -- erp_invoice_customer_status_transaction
 									null, -- erp_invoice_customer_log
 									null, -- erp_receivable_sent_to_erp_at
 									null, -- erp_receivable_returned_from_erp_at
 									@p_order_to_cash_erp_receivable_customer_identification, -- erp_receivable_customer_identification
-									'waiting_to_be_process', -- erp_receivable_status_transaction
+									@p_erp_receivable_status_transaction, -- erp_receivable_status_transaction
 									null, -- erp_receivable_log
 									null, -- erp_invoice_send_to_erp_at
 									null, -- erp_invoice_returned_from_erp_at
-									'waiting_to_be_process', -- erp_invoice_status_transaction
+									@p_erp_invoice_status_transaction, -- erp_invoice_status_transaction
 									null, -- erp_invoice_log
 									null, -- erp_receipt_send_to_erp_at
 									null, -- erp_receipt_returned_from_erp_at
