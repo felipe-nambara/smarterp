@@ -196,7 +196,7 @@ if ( @p_return_v2 ) then -- if 1
 							@v_otc_front_franchise_conciliator_id, -- front_id
 							null, -- erp_invoice_customer_send_to_erp_at
 							null, -- erp_invoice_customer_returned_from_erp_at
-							'waiting_to_be_process', -- erp_invoice_customer_status_transaction
+							'doesnt_need_to_be_process', -- erp_invoice_customer_status_transaction
 							null, -- erp_invoice_customer_log
 							null, -- erp_receivable_sent_to_erp_at
 							null, -- erp_receivable_returned_from_erp_at
