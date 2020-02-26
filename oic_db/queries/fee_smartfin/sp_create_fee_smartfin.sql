@@ -50,7 +50,7 @@ declare v_net_value float;
 declare v_interest_value float;
 declare v_administration_tax_value float;
 declare v_antecipation_tax_value float;
-declare v_qtd_of_receivable int;
+declare v_percentage float;
 declare done int;
 declare v_message_text varchar(255);
 declare v_keycontrol varchar(150);
@@ -232,9 +232,16 @@ if get_lock(@v_keycontrol,1) = 1 then
             
             -- select concat("before 4: ",current_timestamp());
             
+            
+            select 
+				percentage
+				into v_percentage
+            from fee_smartfin_percentage fsp
+            where fsp.id = ( select max(fsp_v2.id) from fee_smartfin_percentage fsp_v2);
+            
 			select 	
-				 round(sum(pay.gross_value),2) as gross_value
-				,round(sum(pay.net_value),2) as net_value
+				 round(sum(pay.gross_value),2)*v_percentage as gross_value
+				,round(sum(pay.net_value),2)*v_percentage as net_value
 				
 				into @v_gross_value
 					,@v_net_value
