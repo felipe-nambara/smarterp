@@ -381,6 +381,8 @@ if ( @p_return_v2 ) then -- if 1
 							supplier_identification,
 							issue_date,
 							due_date,
+                            gross_value,
+                            net_value,
 							erp_payable_send_to_erp_at,
 							erp_payable_returned_from_erp_at,
 							erp_payable_status_transaction,
@@ -406,6 +408,8 @@ if ( @p_return_v2 ) then -- if 1
 							@v_suplier_identification_financial_responsible, -- supplier_identification
 							@v_otc_issue_date, --  issue_date
 							@v_otc_due_date	, -- due_date
+							@v_receivable_gross_value, -- gross_value
+							@v_receivable_gross_value, -- net_value                            
 							null, -- erp_payable_send_to_erp_at
 							null, -- erp_payable_returned_from_erp_at
 							'waiting_to_be_process', -- erp_payable_status_transaction
