@@ -12,6 +12,7 @@ select
     ,iec.erp_attribute_category
     ,iec.erp_fiscal_serie
     ,iec.erp_fiscal_service_situation
+    ,cast(iec.erp_fiscal_message as char(10000) character set utf8) as erp_fiscal_message
     ,oftv.fiscal_municipal_identification
     ,oftv.erp_legal_report_unit
     ,iec.warehouse_id
