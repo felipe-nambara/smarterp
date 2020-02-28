@@ -21,6 +21,8 @@ select
     ,t1.identification_financial_responsible
     ,t1.full_name
     ,t1.receivable_item_value
+    ,t1.administration_tax_value
+    ,t1.interest_value
     ,t1.conciliator_id
     ,t1.credit_card_brand
     ,t1.contract_number
@@ -65,7 +67,9 @@ select
     ,rec.erp_clustered_receivable_id
     ,crc.identification_financial_responsible
     ,crc.full_name
-    ,rec.gross_value as receivable_item_value
+    ,rec.net_value as receivable_item_value
+    ,rec.administration_tax_value*-1 as administration_tax_value
+    ,rec.interest_value
     ,rec.conciliator_id
     ,rec.credit_card_brand
     ,rec.contract_number
@@ -132,6 +136,8 @@ select
     ,crc.identification_financial_responsible
     ,crc.full_name
     ,sum(rec.administration_tax_value*-1) as receivable_item_value
+    ,0 as administration_tax_value
+    ,0 as interest_value
     ,'' as conciliator_id
     ,rec.credit_card_brand
     ,rec.contract_number
@@ -220,6 +226,8 @@ select
     ,crc.identification_financial_responsible
     ,crc.full_name
     ,sum(rec.interest_value) as receivable_item_value
+    ,0 as administration_tax_value
+    ,0 as interest_value    
     ,'' as conciliator_id
     ,rec.credit_card_brand
     ,rec.contract_number
