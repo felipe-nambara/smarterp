@@ -1,5 +1,5 @@
 select 
-cpr.erp_receipt_status_transaction
+	cpr.erp_receipt_status_transaction
 	,otc.id
 	,otc.erp_business_unit
     ,otc.erp_subsidiary
@@ -20,6 +20,20 @@ cpr.erp_receipt_status_transaction
     ,rec.credit_date
     ,rec.credit_card_brand
     ,rec.erp_receivable_id
+    ,rec.erp_clustered_receivable_id
+    ,concat(rec.erp_clustered_receivable_id,'.',ifnull((
+												select 
+													count(distinct cpr_v2.erp_receipt_id) as qtd
+												from conciliated_payed_receivable cpr_v2
+
+												inner join receivable rec_v2
+												on rec_v2.conciliator_id = cpr_v2.conciliator_id
+												and rec_v2.erp_clustered_receivable_id is not null
+												and rec_v2.erp_clustered_receivable_customer_id is not null
+												and rec_v2.converted_smartfin <> 'yes'
+
+												where rec_v2.erp_clustered_receivable_id = rec.erp_clustered_receivable_id
+												and cpr_v2.erp_receipt_id is not null),0) + 1) as cr_number
     ,if (rec.transaction_type in ('credit_card_recurring','credit_card_tef','credit_card_pos','online_credit_card'), 'CARTOES DE CREDITO', 
           if (rec.transaction_type = 'debit_account_recurring', 'DEPOSITO EM CONTA CORRENTE', 
  		     if (rec.transaction_type in ('debit_card_tef','debit_card_pos','online_debit_card'), 'CARTOES DE DEBITO', 
@@ -58,10 +72,5 @@ and rec.erp_receivable_id is not null
 and cpr.erp_receipt_status_transaction = 'waiting_to_be_process'
 and cpr.erp_receipt_id is null
 and cpr.conciliation_type = 'PCV'
--- and rec.conciliator_id in ('1256940585','1256940558','1256940691')
 
 group by rec.erp_receivable_id; -- Considerar somente os retornos de comprovante de recebimento enviado pela conciliadora
-
-
-
-
