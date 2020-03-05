@@ -48,7 +48,7 @@ declare cur1 cursor for select * from vw_clustered_receivable
                                 ,operation
                                 ,transaction_type
                                 ,credit_card_brand
-                                ,billing_date /*limit 50*/;
+                                ,billing_date;
 declare continue handler for not found set done=1;
 declare exit handler for sqlexception 
 begin
