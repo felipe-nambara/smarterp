@@ -10,8 +10,8 @@ select
     ,round(sum(cpr.gross_value),2) as gross_value
 	,date_format(cpr.created_at, '%y%m%d') as Deposit_Date
     ,time (cpr.created_at) as credit_hour 
-    ,concat ('RD_',cpr.bank_number,'_',right(cpr.bank_branch,4),'_',convert(cpr.bank_account,unsigned)) as Receipt_Method
-    ,RTRIM (concat('RD_',cpr.bank_number,'_',right(cpr.bank_branch,4),'_',convert(cpr.bank_account,unsigned),'_',rec.credit_date)) as Lote_Name
+    ,concat ('RD_',cpr.bank_number,' ',right(cpr.bank_branch,4),' ',convert(cpr.bank_account,unsigned)) as Receipt_Method
+    ,RTRIM (concat('RD_',cpr.bank_number,' ',right(cpr.bank_branch,4),' ',convert(cpr.bank_account,unsigned),' ',rec.credit_date)) as Lote_Name
     ,RTRIM (concat(cus.identification_financial_responsible,'Faturar')) as Customer_Site
     ,rec.conciliator_id
     ,rec.credit_card_brand
