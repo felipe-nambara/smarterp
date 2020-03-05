@@ -40,7 +40,7 @@ select
     ,iit.erp_ncm_code -- Código NCM do produto
     ,if(month(rec.billing_date)=month(current_date()),rec.billing_date,current_date()) as erp_trx_date
     ,if(month(rec.billing_date)=month(current_date()),rec.billing_date,current_date()) as erp_gl_date  
-    ,if(ivcr.type_person='foreign','7.949',if(oftv.state=ivcr.state,'5.933','7.949')) as cfop_code
+    ,if(ivcr.type_person='foreign','7949',if(oftv.state=ivcr.state,'5933','7949')) as cfop_code
 from invoice ivc
 
 inner join invoice_items iit
