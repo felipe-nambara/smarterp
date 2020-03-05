@@ -36,6 +36,7 @@ begin
     declare v_invoice_id integer;    
     declare v_erp_item_ar_id varchar(45); 
     declare v_erp_gl_segment_id varchar(45);
+    declare v_erp_gl_segment_name varchar(255);
     declare v_erp_ncm_code varchar(45);
     declare v_erp_item_ar_overdue_recovery_id varchar(45);
 
@@ -387,10 +388,12 @@ begin
 											select 
 												 erp_item_ar_id
 												,erp_gl_segment_id
+												,erp_gl_segment_name
 												,erp_ncm_code
 												,erp_item_ar_overdue_recovery_id
 												into @v_erp_item_ar_id
 													,@v_erp_gl_segment_id
+													,@v_erp_gl_segment_name
 													,@v_erp_ncm_code
 													,@v_erp_item_ar_overdue_recovery_id
 											from product_from_to_version prodftv
@@ -425,6 +428,7 @@ begin
 												front_plan_id,
 												front_addon_id,
 												erp_item_ar_id,
+												erp_item_ar_name,
 												erp_gl_segment_product,
 												erp_ncm_code,
 												quantity,
@@ -438,6 +442,7 @@ begin
 												null, -- front_plan_id
 												null, -- front_addon_id
 												@v_erp_item_ar_id, -- erp_item_ar_id
+												@v_erp_item_ar_name, -- erp_item_ar_name
 												@v_erp_gl_segment_id, -- erp_gl_segment_product
 												@v_erp_ncm_code, -- erp_ncm_code
 												@p_quantity, -- quantity
