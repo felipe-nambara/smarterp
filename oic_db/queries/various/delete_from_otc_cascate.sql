@@ -1,7 +1,7 @@
-delete from invoice_items where id_invoice in ( select id from invoice where order_to_cash_id in (select id from order_to_cash where operation = 'smartfin_fee'  ) ) ;
-delete from invoice where order_to_cash_id in (select id from order_to_cash where operation = 'smartfin_fee' )  ;
-delete from payable where receivable_id in ( select id from receivable where order_to_cash_id in (select id from order_to_cash where operation = 'smartfin_fee' ) ) ;
-delete from supplier where identification_financial_responsible in ( select supplier_identification from payable where receivable_id in ( select id from receivable where order_to_cash_id in (select id from order_to_cash where operation = 'smartfin_fee'  ) ) ) ;
-delete from receivable where order_to_cash_id in (select id from order_to_cash where operation = 'smartfin_fee' )  ;
-delete from invoice_customer where order_to_cash_id in (select id from order_to_cash where operation = 'smartfin_fee' )  ;
-delete from order_to_cash where operation = 'smartfin_fee' ;
+delete from invoice_items where id_invoice in ( select id from invoice where order_to_cash_id in (select id from order_to_cash where origin_system = 'corporatepass' and operation = 'distribution' and front_id in (4870, 5049, 5205, 5367, 5530, 5699, 5878, 6051, 6225, 6399) ) ) ;
+delete from invoice where order_to_cash_id in (select id from order_to_cash where origin_system = 'corporatepass' and operation = 'distribution' and front_id in (4870, 5049, 5205, 5367, 5530, 5699, 5878, 6051, 6225, 6399) )  ;
+delete from payable where receivable_id in ( select id from receivable where order_to_cash_id in (select id from order_to_cash where origin_system = 'corporatepass' and operation = 'distribution' and front_id in (4870, 5049, 5205, 5367, 5530, 5699, 5878, 6051, 6225, 6399) ) ) ;
+delete from supplier where identification_financial_responsible in ( select supplier_identification from payable where receivable_id in ( select id from receivable where order_to_cash_id in (select id from order_to_cash where origin_system = 'corporatepass' and operation = 'distribution' and front_id in (4870, 5049, 5205, 5367, 5530, 5699, 5878, 6051, 6225, 6399)  ) ) ) ;
+delete from receivable where order_to_cash_id in (select id from order_to_cash where origin_system = 'corporatepass' and operation = 'distribution' and front_id in (4870, 5049, 5205, 5367, 5530, 5699, 5878, 6051, 6225, 6399) )  ;
+delete from invoice_customer where order_to_cash_id in (select id from order_to_cash where origin_system = 'corporatepass' and operation = 'distribution' and front_id in (4870, 5049, 5205, 5367, 5530, 5699, 5878, 6051, 6225, 6399) )  ;
+delete from order_to_cash where origin_system = 'corporatepass' and operation = 'distribution' and front_id in (4870, 5049, 5205, 5367, 5530, 5699, 5878, 6051, 6225, 6399) ;
