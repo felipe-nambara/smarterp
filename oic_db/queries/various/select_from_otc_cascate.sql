@@ -1,6 +1,6 @@
-select * from order_to_cash where operation = 'smartfin_fee' and id = 1055438;
-select * from invoice_customer where order_to_cash_id in (select id from order_to_cash where operation = 'smartfin_fee' and id = 1055438)  ;
-select * from receivable where order_to_cash_id in (select id from order_to_cash where operation = 'smartfin_fee' and id = 1055438)  ;
-select * from invoice where order_to_cash_id in (select id from order_to_cash where operation = 'smartfin_fee' and id = 1055438)  ;
-select * from invoice_items where id_invoice in ( select id from invoice where order_to_cash_id in (select id from order_to_cash where operation = 'smartfin_fee'  and id = 1055438) ) ;
-select * from payable where fee_smartfin_otc_id and fee_smartfin_otc_id = 1055438;	
+select * from order_to_cash where origin_system = 'corporatepass' and operation = 'distribution' and front_id in (4870, 5049, 5205, 5367, 5530, 5699, 5878, 6051, 6225, 6399);
+select * from invoice_customer where order_to_cash_id in (select id from order_to_cash where origin_system = 'corporatepass' and operation = 'distribution' and front_id in (4870, 5049, 5205, 5367, 5530, 5699, 5878, 6051, 6225, 6399))  ;
+select * from receivable where order_to_cash_id in (select id from order_to_cash where origin_system = 'corporatepass' and operation = 'distribution' and front_id in (4870, 5049, 5205, 5367, 5530, 5699, 5878, 6051, 6225, 6399))  ;
+select * from invoice where order_to_cash_id in (select id from order_to_cash where origin_system = 'corporatepass' and operation = 'distribution' and front_id in (4870, 5049, 5205, 5367, 5530, 5699, 5878, 6051, 6225, 6399))  ;
+select * from invoice_items where id_invoice in ( select id from invoice where order_to_cash_id in (select id from order_to_cash where origin_system = 'corporatepass' and operation = 'distribution' and front_id in (4870, 5049, 5205, 5367, 5530, 5699, 5878, 6051, 6225, 6399)) ) ;
+select * from customer cus where cus.identification_financial_responsible = '07594978014128';
