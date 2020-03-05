@@ -31,7 +31,7 @@ select
     ,chbk.billing_date
     ,chbk.credit_date
     ,convert(chbk.bank_account,unsigned) as bank_account
-    ,concat('RD_',rtrim(chbk.bank_number),'_',right(chbk.bank_branch,4),'_',rtrim(convert(chbk.bank_account,unsigned))) as receipt_method
+    ,concat('RD_',rtrim(chbk.bank_number),' ',right(chbk.bank_branch,4),' ',rtrim(convert(chbk.bank_account,unsigned))) as receipt_method
     ,if(month(chbk.credit_date)=month(current_date()),chbk.credit_date,current_date()) as erp_trx_date
     ,if(month(chbk.credit_date)=month(current_date()),chbk.credit_date,current_date()) as erp_gl_date    
 from chargeback chbk
