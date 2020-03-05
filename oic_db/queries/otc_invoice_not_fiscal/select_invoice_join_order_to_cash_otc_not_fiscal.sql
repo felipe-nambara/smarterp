@@ -39,7 +39,8 @@ select
     ,iit.list_price -- Preço de lista
     ,iit.erp_ncm_code -- Código NCM do produto
     ,if(month(rec.billing_date)=month(current_date()),rec.billing_date,current_date()) as erp_trx_date
-    ,if(month(rec.billing_date)=month(current_date()),rec.billing_date,current_date()) as erp_gl_date       
+    ,if(month(rec.billing_date)=month(current_date()),rec.billing_date,current_date()) as erp_gl_date  
+    ,if(ivcr.type_person='foreign','7.949',if(oftv.state=ivcr.state,'5.933','7.949')) as cfop_code
 from invoice ivc
 
 inner join invoice_items iit
@@ -96,7 +97,7 @@ and otc.erp_subsidiary = 'BR010001' -- Filtro por filial (loop automático)
 and otc.origin_system = 'smartsystem' -- Integração em paralelo por origem (SmartFit, BioRitmo, etc...)
 and otc.operation = 'person_plan' -- Integração em paralelo por operação (plano de alunos, plano corporativo, etc...)
 and otc.to_generate_invoice = 'yes'
-and otc.erp_invoice_status_transaction = 'waiting_to_be_process' -- Filtrar as transações cuja invoice ainda não foi integrada com o erp e está aguardando processamento;
+and otc.erp_invoice_not_fiscal_status_transaction = 'waiting_to_be_process' -- Filtrar as transações cuja invoice ainda não foi integrada com o erp e está aguardando processamento;
 and rec.transaction_type = 'credit_card_recurring' /*'credit_card_recurring', 'debit_card_recurring', 'debit_account_recurring', 'credit_card_tef', 'debit_card_tef', 'credit_card_pos', 'debit_card_pos', 'cash', 'boleto', 'bank_transfer', 'online_credit_card', 'online_debit_card'*/
 and ( otc.erp_receivable_status_transaction = 'created_at_erp' or otc_v2.erp_receivable_status_transaction = 'created_at_erp' )-- Filtrar as transações cujos receivables que já foram integrados no erp
 and ( rec.erp_receivable_id is not null or rec_v2.erp_receivable_id is not null ) -- Filtrar somente os receivables que já foram integrados
