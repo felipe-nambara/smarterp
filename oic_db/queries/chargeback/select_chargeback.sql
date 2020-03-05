@@ -14,6 +14,7 @@ select
     ,cecg.erp_attribute_category     
     ,crc.identification_financial_responsible -- na api front identification_financial_responsible
     ,crc.full_name
+    ,crc.chargeback_acquirer_label
     ,rec.identification_gym_student -- na api front customer_identification
     ,chbk.erp_clustered_chargeback_id
     ,sum(chbk.gross_value) as gross_value  -- na api front amount
