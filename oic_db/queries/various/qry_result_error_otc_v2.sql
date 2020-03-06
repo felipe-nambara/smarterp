@@ -78,3 +78,29 @@ where otc.acronym in ('SPISCS2','RJCCOP4','DFCSUD1')
 and otc.erp_receivable_status_transaction = 'being_processed' ;
 
 */
+/*
+update order_to_cash otc 
+
+inner join invoice_customer ivc
+on ivc.order_to_cash_id = otc.id
+
+set otc.erp_invoice_customer_status_transaction = 'waiting_to_be_process'
+,otc.erp_invoice_customer_send_to_erp_at = null
+,otc.erp_invoice_customer_returned_from_erp_at = null
+,otc.erp_invoice_customer_log = null
+,ivc.erp_customer_id = null
+,ivc.erp_filename = null
+,ivc.erp_line_in_file = null
+,otc.erp_receivable_status_transaction = 'clustered_receivable_created'
+,otc.erp_receivable_sent_to_erp_at = null
+,otc.erp_receivable_returned_from_erp_at = null
+,otc.erp_receivable_log = null
+,otc.erp_invoice_status_transaction = 'waiting_to_be_process'
+,otc.erp_invoice_send_to_erp_at = null
+,otc.erp_invoice_returned_from_erp_at = null
+,otc.erp_invoice_log = null
+where otc.unity_identification = 360
+and otc.id in ( select id from ctrl_regs2 );
+*/
+
+-- select otc.*, ivc.* from order_to_cash otc inner join invoice_customer ivc on ivc.order_to_cash_id = otc.id where otc.id in ( select id from ctrl_regs2 ) and otc.unity_identification =  236 and otc.erp_invoice_customer_status_transaction = 'error_trying_to_create_at_erp';
