@@ -114,12 +114,11 @@ and otc.to_generate_invoice = 'yes'
 and otc.erp_invoice_status_transaction = 'waiting_to_be_process' -- Filtrar as transações cuja invoice ainda não foi integrada com o erp e está aguardando processamento;
 and rec.transaction_type = 'credit_card_recurring' /*'credit_card_recurring', 'debit_card_recurring', 'debit_account_recurring', 'credit_card_tef', 'debit_card_tef', 'credit_card_pos', 'debit_card_pos', 'cash', 'boleto', 'bank_transfer', 'online_credit_card', 'online_debit_card'*/
 
-
 and ( otc.erp_receivable_status_transaction = 'created_at_erp' or otc_v2.erp_receivable_status_transaction = 'created_at_erp' )-- Filtrar as transações cujos receivables que já foram integrados no erp
 and ( rec.erp_receivable_id is not null or rec_v2.erp_receivable_id is not null ) -- Filtrar somente os receivables que já foram integrados
 
 and ( otc.erp_invoice_customer_status_transaction = 'created_at_erp' or otc_v3.erp_invoice_customer_status_transaction = 'created_at_erp' )-- Filtrar as transações cujos receivables que já foram integrados no erp
-and ( ivc.erp_customer_id is not null or ivc_v2.erp_customer_id is not null ) -- Filtrar somente os receivables que já foram integrados
+and ( ivcr.erp_customer_id is not null or ivc_v2.erp_customer_id is not null ) -- Filtrar somente os receivables que já foram integrados
 
 and ivc.erp_invoice_id is null -- Filtrar somente as invoices que ainda não foram integrados com o erp
 and iit.to_generate_fiscal_document = 'yes' -- Tratamento para exclusão de itens de multa contratual, pois haverá uma integração separada para tal
