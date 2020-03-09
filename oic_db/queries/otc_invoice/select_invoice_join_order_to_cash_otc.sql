@@ -67,10 +67,19 @@ and otc_v2.id = (
 
 left join receivable rec_v2
 on rec_v2.order_to_cash_id = otc_v2.id
-and rec_v2.erp_receivable_id is not null
+                
+left join invoice_customer ivc_v2
+on ivc_v2.identification_financial_responsible = ivcr.identification_financial_responsible
+and ivc_v2.id = (
+					select
+						max(ivc_v3.id)
+					from invoice_customer ivc_v3
+                    where ivc_v3.identification_financial_responsible = ivc_v2.identification_financial_responsible
+                    and ivc_v3.erp_customer_id is not null
+				)
 
 left join order_to_cash otc_v3
-on otc_v3.minifactu_id = otc.minifactu_id
+on otc_v3.id = ivc_v2.order_to_cash_id
 and otc_v3.erp_invoice_customer_status_transaction in ('created_at_erp')
 and otc_v3.id = ( 
 					select 
@@ -79,9 +88,6 @@ and otc_v3.id = (
                     where otc_v4.minifactu_id = otc_v3.minifactu_id
                     and otc_v4.erp_invoice_customer_status_transaction = otc_v3.erp_invoice_customer_status_transaction
 				)
-                
-left join invoice_customer ivc_v2
-on ivc_v2.order_to_cash_id = otc_v3.id
 
 left join invoice_erp_configurations iec
 on iec.country = otc.country
@@ -106,7 +112,7 @@ and oftv.created_at = 	(
 						)
 
 where otc.country = 'Brazil' -- Integração em paralelo por operação do país
-and otc.erp_subsidiary = 'BR010001' -- Filtro por filial (loop automático)
+and otc.erp_subsidiary = 'BR010050' -- Filtro por filial (loop automático)
 and otc.origin_system = 'smartsystem' -- Integração em paralelo por origem (SmartFit, BioRitmo, etc...)
 and otc.operation = 'person_plan' -- Integração em paralelo por operação (plano de alunos, plano corporativo, etc...)
 and otc.to_generate_invoice = 'yes'
