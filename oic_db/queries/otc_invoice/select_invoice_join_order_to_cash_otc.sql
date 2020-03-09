@@ -82,7 +82,6 @@ and otc_v3.id = (
                 
 left join invoice_customer ivc_v2
 on ivc_v2.order_to_cash_id = otc_v3.id
-and ivc_v2.erp_customer_id is not null
 
 left join invoice_erp_configurations iec
 on iec.country = otc.country
