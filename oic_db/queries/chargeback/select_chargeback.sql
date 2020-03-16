@@ -19,6 +19,7 @@ select
     ,chbk.erp_clustered_chargeback_id
     ,sum(chbk.gross_value) as gross_value  -- na api front amount
     ,chbk.conciliator_id
+    ,chbk.id
     ,chbk.credit_card_brand -- na api front credit_card_brand
     ,chbk.contract_number
     ,chbk.transaction_type as chbk_transaction_type
