@@ -1,82 +1,139 @@
-select 
-		order_to_cash.origin_system,
-		ivc.identification_financial_responsible,
-		ivc.full_name,
-		ivc.adress,
-		ivc.adress_number,
-		ivc.adress_complement,
-		ivc.district,
-		ivc.city,
-		ivc.state,
-		ivc.postal_code,
-		ivc.nationality_code,
-		ivc.area_code,
-		ivc.cellphone,
-		ivc.email,
-		ivc.erp_customer_id
-from order_to_cash 
+select otc.id, 
+       cust.id, 
+       otc.origin_system, 
+       otc.country, 
+       cust.identification_financial_responsible, 
+       cust.full_name, 
+       cust.adress, 
+       cust.adress_number, 
+       cust.adress_complement, 
+       cust.district, 
+       cust.city, 
+       cust.state, 
+       cust.postal_code, 
+       cust.nationality_code, 
+       cust.area_code, 
+       cust.cellphone, 
+       cust.email, 
+       cust.erp_customer_id 
+from order_to_cash otc 
 
-inner join invoice_customer ivc 
-on order_to_cash.id = ivc.order_to_cash_id
+inner join invoice_customer cust 
+on otc.id = cust.order_to_cash_id 
 
-inner join invoice_customer_comparation  
-on ivc.erp_customer_id = invoice_customer_comparation.erp_customer_id 
-and ivc.identification_financial_responsible = invoice_customer_comparation.identification_financial_responsible
+inner join invoice_customer_comparation custc 
+on cust.erp_customer_id = custc.erp_customer_id 
+and cust.identification_financial_responsible = custc.identification_financial_responsible 
 
-where order_to_cash.country = 'Brazil' -- Integração em paralelo por operação do país
-and order_to_cash.erp_subsidiary = 'BR030001' -- No caso de Roaylties sempre será essa filial (Franqueadora)
-and order_to_cash.origin_system = 'smartsystem' -- Integração em paralelo por origem (SmartFit, BioRitmo, etc...)
-and order_to_cash.operation = 'royalties' -- Integração em paralelo por operação (plano de alunos, plano corporativo, etc...)
-and order_to_cash.erp_invoice_customer_status_transaction = 'waiting_to_be_process' -- Filtrar somente os registros que ainda não foram integrados com o erp e estão aguardando processamento
-and order_to_cash.to_generate_customer = 'yes'
-and (
-	ivc.erp_customer_id <> invoice_customer_comparation.erp_customer_id
-	or ivc.full_name <> invoice_customer_comparation.full_name
-	or ivc.type_person <> invoice_customer_comparation.type_person
-	or ivc.nationality_code <> invoice_customer_comparation.nationality_code
-	or ivc.state <> invoice_customer_comparation.state
-	or ivc.city <> invoice_customer_comparation.city
-	or ivc.adress <> invoice_customer_comparation.adress
-	or ivc.adress_number <> invoice_customer_comparation.adress_number
-	or ivc.adress_complement <> invoice_customer_comparation.adress_complement 
-	or ivc.district <> invoice_customer_comparation.district
-	or ivc.postal_code <> invoice_customer_comparation.postal_code
-	or ivc.area_code <> invoice_customer_comparation.area_code
-	or ivc.cellphone <> invoice_customer_comparation.cellphone
-	or ivc.email <> invoice_customer_comparation.email
-	or ivc.state_registration <> invoice_customer_comparation.state_registration
-	or ivc.federal_registration <> invoice_customer_comparation.federal_registration
-	or ivc.final_consumer <> invoice_customer_comparation.final_consumer
-	or ivc.icms_contributor <> invoice_customer_comparation.icms_contributor
-)
+inner join receivable rec 
+on otc.id = rec.order_to_cash_id 
+
+where  otc.country = 'Brazil' 
+and otc.origin_system = 'smartsystem' 
+and otc.operation = 'royalties' 
+and otc.erp_subsidiary = 'BR030001' -- No caso de Roaylties sempre será essa filial (Franqueadora)
+and otc.erp_invoice_customer_status_transaction = 'waiting_to_be_process' 
+and cust.erp_customer_id is not null 
+and cust.id = (	
+				select 
+					max(cust_v2.id) 
+				from   order_to_cash otc_v2 
                 
-union
+                inner join invoice_customer cust_v2 
+                on otc_v2.id = cust_v2.order_to_cash_id 
+                
+                inner join receivable rec_v2 
+                on otc_v2.id = rec_v2.order_to_cash_id 
+                
+                where  cust_v2.identification_financial_responsible = cust.identification_financial_responsible 
+				and otc_v2.country = otc.country 
+                and otc_v2.origin_system = otc.origin_system 
+                and otc_v2.operation = otc.operation 
+                and rec_v2.transaction_type = rec.transaction_type 
+                and otc_v2.erp_subsidiary = otc.erp_subsidiary 
+                and otc_v2.erp_invoice_customer_status_transaction = otc.erp_invoice_customer_status_transaction 
+				and otc_v2.to_generate_customer = otc.to_generate_customer 
+				) 
+and ( 	
+		cust.full_name <> custc.full_name 
+		or cust.type_person <> custc.type_person 
+		or cust.nationality_code <> custc.nationality_code 
+		or cust.state <> custc.state 
+		or cust.city <> custc.city 
+		or cust.adress <> custc.adress 
+		or cust.adress_number <> custc.adress_number 
+		or cust.adress_complement <> custc.adress_complement 
+		or cust.district <> custc.district 
+		or cust.postal_code <> custc.postal_code 
+		or cust.area_code <> custc.area_code 
+		or cust.cellphone <> custc.cellphone 
+		or cust.email <> custc.email 
+		or cust.state_registration <> custc.state_registration 
+		or cust.federal_registration <> custc.federal_registration 
+		or cust.final_consumer <> custc.final_consumer 
+		or cust.icms_contributor <> custc.icms_contributor ) 
+and otc.to_generate_customer = 'yes' 
 
-select
-		order_to_cash.origin_system,
-		ivc.identification_financial_responsible,
-		ivc.full_name,
-		ivc.adress,
-		ivc.adress_number,
-		ivc.adress_complement,
-		ivc.district,
-		ivc.city,
-		ivc.state,
-		ivc.postal_code,
-		ivc.nationality_code,
-		ivc.area_code,
-		ivc.cellphone,
-		ivc.email,
-		ivc.erp_customer_id
-from order_to_cash order_to_cash
+union 
 
-inner join invoice_customer ivc
-on order_to_cash.id = ivc.order_to_cash_id
+select otc.id, 
+       cust.id, 
+       otc.origin_system, 
+       otc.country, 
+       cust.identification_financial_responsible, 
+       cust.full_name, 
+       cust.adress, 
+       cust.adress_number, 
+       cust.adress_complement, 
+       cust.district, 
+       cust.city, 
+       cust.state, 
+       cust.postal_code, 
+       cust.nationality_code, 
+       cust.area_code, 
+       cust.cellphone, 
+       cust.email, 
+       cust.erp_customer_id 
+from order_to_cash otc 
 
-where order_to_cash.country = 'Brazil' -- Integração em paralelo por operação do país
-and order_to_cash.erp_subsidiary = 'BR030001' -- No caso de Roaylties sempre será essa filial (Franqueadora)
-and order_to_cash.origin_system = 'smartsystem' -- Integração em paralelo por origem (SmartFit, BioRitmo, etc...)
-and order_to_cash.operation = 'royalties' -- Integração em paralelo por operação (plano de alunos, plano corporativo, etc...)
-and order_to_cash.erp_invoice_customer_status_transaction = 'waiting_to_be_process' -- Filtrar somente os registros que ainda não foram integrados com o erp e estão aguardando processamento
-and order_to_cash.to_generate_customer = 'yes'
-and ivc.erp_customer_id is null;
+inner join invoice_customer cust 
+on otc.id = cust.order_to_cash_id 
+
+inner join receivable rec 
+on otc.id = rec.order_to_cash_id 
+
+where otc.country = 'Brazil' 
+and otc.origin_system = 'smartsystem' 
+and otc.operation = 'royalties' 
+and rec.transaction_type = 'credit_card_recurring' 
+and otc.erp_subsidiary = 'BR030001' -- No caso de Roaylties sempre será essa filial (Franqueadora)
+and otc.erp_invoice_customer_status_transaction = 'waiting_to_be_process' 
+and cust.erp_customer_id is null 
+and otc.to_generate_customer = 'yes' 
+and cust.id = (	
+				select 
+					max(cust_v2.id) 
+				from order_to_cash otc_v2 
+                
+                inner join invoice_customer cust_v2 
+                on otc_v2.id = cust_v2.order_to_cash_id 
+                
+                inner join receivable rec_v2 
+				on otc_v2.id = rec_v2.order_to_cash_id 
+                
+                where  cust_v2.identification_financial_responsible = cust.identification_financial_responsible 
+				and otc_v2.country = otc.country 
+                and otc_v2.origin_system = otc.origin_system 
+                and otc_v2.operation = otc.operation 
+                and rec_v2.transaction_type = rec.transaction_type 
+                and otc_v2.erp_subsidiary = otc.erp_subsidiary 
+                and otc_v2.erp_invoice_customer_status_transaction = otc.erp_invoice_customer_status_transaction 
+				and otc_v2.to_generate_customer = otc.to_generate_customer 
+				) 
+and not exists (
+				select 
+					1 
+				from   invoice_customer_comparation ivcc 
+				where  cust.identification_financial_responsible = 
+				ivcc.identification_financial_responsible
+				) ; 
