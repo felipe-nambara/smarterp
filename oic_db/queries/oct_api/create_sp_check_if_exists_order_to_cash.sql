@@ -42,10 +42,10 @@ begin
     and otc.id = (  select max(otc_v2.id) from order_to_cash otc_v2 where otc_v2.minifactu_id = otc.minifactu_id);
     
     if (v_id is null 
-		or ( v_erp_invoice_customer_status_transaction = 'error_trying_to_create_at_erp' and v_erp_receivable_status_transaction not in ('waiting_to_be_process','clustered_receivable_being_created','being_processed') )
-		or v_erp_receivable_status_transaction = 'error_at_trying_to_process'
-        or v_erp_receivable_status_transaction = 'error_trying_to_create_at_erp' 
-        or ( v_erp_invoice_status_transaction = 'error_trying_to_create_at_erp' and v_erp_receivable_status_transaction not in ('waiting_to_be_process','clustered_receivable_being_created','being_processed') ) ) then
+		or ( v_erp_invoice_customer_status_transaction in ('error_trying_to_create_at_erp','exception_at_oic') and v_erp_receivable_status_transaction not in ('waiting_to_be_process','clustered_receivable_being_created','being_processed') )
+		or v_erp_receivable_status_transaction in ('error_at_trying_to_process','exception_at_oic')
+        or v_erp_receivable_status_transaction in ('error_trying_to_create_at_erp','exception_at_oic')
+        or ( v_erp_invoice_status_transaction in ('error_trying_to_create_at_erp','exception_at_oic') and v_erp_receivable_status_transaction not in ('waiting_to_be_process','clustered_receivable_being_created','being_processed') ) ) then
 
 		set p_return = true;
 		set p_code = 0;
