@@ -4,6 +4,9 @@ select
     ,otc.erp_legal_entity
     ,otc.erp_subsidiary
     ,otc.acronym
+    ,otc.to_generate_customer
+    ,otc.to_generate_receivable
+    ,otc.to_generate_invoice
 	,otc.erp_invoice_customer_status_transaction
     ,otc.erp_receivable_status_transaction
     ,otc.erp_invoice_status_transaction
@@ -13,16 +16,24 @@ from order_to_cash otc
 inner join receivable rec
 on rec.order_to_cash_id = otc.id
 
-where otc.id in ( select id from ctrl_regs2 )
+where (	otc.id in ( select max_otc_id from ctrl_regs3 nolock ) )
 
 group by otc.unity_identification
 		,otc.erp_business_unit
 		,otc.erp_legal_entity
 		,otc.erp_subsidiary
 		,otc.acronym
+		,otc.to_generate_customer
+		,otc.to_generate_receivable
+		,otc.to_generate_invoice        
 		,otc.erp_invoice_customer_status_transaction
 		,otc.erp_receivable_status_transaction
 		,otc.erp_invoice_status_transaction;
+
+-- select * from order_to_cash where id in ( select max_otc_id from ctrl_regs3 nolock ) and erp_invoice_customer_status_transaction = 'error_trying_to_create_at_erp';
+-- select * from order_to_cash where id in ( select max_otc_id from ctrl_regs3 nolock ) and erp_receivable_status_transaction = 'error_trying_to_create_at_erp';
+-- select * from order_to_cash where id in ( select max_otc_id from ctrl_regs3 nolock ) and erp_invoice_status_transaction = 'error_trying_to_create_at_erp';
+-- select erp_clustered_receivable_id, rec.* from receivable rec where order_to_cash_id in ( select id from order_to_cash where id in ( select max_otc_id from ctrl_regs3 nolock ) and erp_receivable_status_transaction = 'clustered_receivable_created' ) and erp_clustered_receivable_id is not null ;
 
 -- select oftv.* from organization_from_to_version oftv where oftv.acronym in ('RJCCOP4','DFCSUD1','SPISCS2');
 -- select otc.* from order_to_cash otc where otc.unity_identification = 360 and otc.erp_receivable_status_transaction = 'error_trying_to_create_at_erp';
