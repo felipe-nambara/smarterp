@@ -24,6 +24,7 @@ select
     ,rec.billing_date
     ,rec.erp_receivable_id
     ,time (rec.credit_date) as credit_hour
+    ,crc.full_name
 from receivable rec
 
 inner join order_to_cash otc
@@ -59,7 +60,7 @@ and rftv.created_at = 	(
 						)
 
 where otc.country = 'Brazil' -- Integração em paralalo por operação do país
-and otc.erp_subsidiary = 'BR020001' -- Filtro por filial (loop automático) -- não considerar subsidiary BR020001 que representa a Smartfin - ela terá um job específico
+-- and otc.erp_subsidiary = 'BR020001' -- Filtro por filial (loop automático) -- não considerar subsidiary BR020001 que representa a Smartfin - ela terá um job específico
 and otc.origin_system = 'smartsystem' -- Integração em paralalo por origem (SmartFit, BioRitmo, etc...)
 and otc.operation = 'person_plan' -- Integração em paralalo por operação (plano de alunos, plano corporativo, etc...)
 and otc.erp_receivable_status_transaction = 'created_at_erp' -- Filtrar somente os registros que ainda não foram integrados com o erp e estão aguardando processamento
