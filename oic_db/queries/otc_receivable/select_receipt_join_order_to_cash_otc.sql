@@ -60,7 +60,7 @@ and rftv.created_at = 	(
 						)
 
 where otc.country = 'Brazil' -- Integração em paralalo por operação do país
--- and otc.erp_subsidiary = 'BR020001' -- Filtro por filial (loop automático) -- não considerar subsidiary BR020001 que representa a Smartfin - ela terá um job específico
+and otc.erp_subsidiary = 'BR020001' -- Filtro por filial (loop automático) -- não considerar subsidiary BR020001 que representa a Smartfin - ela terá um job específico
 and otc.origin_system = 'smartsystem' -- Integração em paralalo por origem (SmartFit, BioRitmo, etc...)
 and otc.operation = 'person_plan' -- Integração em paralalo por operação (plano de alunos, plano corporativo, etc...)
 and otc.erp_receivable_status_transaction = 'created_at_erp' -- Filtrar somente os registros que ainda não foram integrados com o erp e estão aguardando processamento
@@ -68,6 +68,7 @@ and rec.converted_smartfin <> 'yes'
 and rec.erp_clustered_receivable_id is not null -- Filtrar somente os receivables que possui relacionamento com a clustered_receivable
 and rec.erp_clustered_receivable_customer_id is not null -- Filtrar somente os receivables que possui relacionamento com a customer 
 and rec.erp_receivable_id is not null -- Filtrar somente os receivables que já foram integrados no erp e devem ser baixados
+and rec.erp_receipt_id is null -- Filtrar somente os receipts que ainda não foram integrados
 and rec.net_value > 0
 and rec.transaction_type in ('debit_account_recurring','cash','boleto') -- Neste caso a integração deverá filtrar somente os receivables cujos métodos de recebimentos são débito em conta corrente, dinheiro ou boleto.
 group by rec.erp_receivable_id;
