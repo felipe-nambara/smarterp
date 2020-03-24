@@ -30,7 +30,7 @@ if get_lock(@v_keycontrol,1) = 1 then
     ,otc.erp_invoice_customer_status_transaction = 'waiting_to_be_process'
     ,otc.erp_invoice_customer_log = null
     
-    where otc.erp_invoice_customer_status_transaction = 'being_processed'
+    where otc.erp_invoice_customer_status_transaction in ('being_processed','exception_at_oic')
     and timestampdiff(minute,otc.erp_invoice_customer_send_to_erp_at,current_timestamp()) >= p_interval_seconds;
 
     update order_to_cash otc 
@@ -44,7 +44,7 @@ if get_lock(@v_keycontrol,1) = 1 then
     ,otc.erp_receivable_status_transaction = 'clustered_receivable_created'
     ,otc.erp_receivable_log = null
     
-    where otc.erp_receivable_status_transaction = 'being_processed'
+    where otc.erp_receivable_status_transaction in ('being_processed','exception_at_oic')
     and timestampdiff(minute,otc.erp_receivable_sent_to_erp_at,current_timestamp()) >= p_interval_seconds;
 
     update order_to_cash otc 
@@ -54,7 +54,7 @@ if get_lock(@v_keycontrol,1) = 1 then
     ,otc.erp_invoice_status_transaction = 'waiting_to_be_process'
     ,otc.erp_invoice_log = null
     
-    where otc.erp_invoice_status_transaction = 'being_processed'
+    where otc.erp_invoice_status_transaction in ('being_processed','exception_at_oic','fiscal_attributes_being_process')
     and timestampdiff(minute,otc.erp_invoice_send_to_erp_at,current_timestamp()) >= p_interval_seconds;
 
     update order_to_cash otc 
@@ -64,8 +64,18 @@ if get_lock(@v_keycontrol,1) = 1 then
     ,otc.erp_receipt_status_transaction = 'waiting_to_be_process'
     ,otc.erp_receipt_log = null
     
-    where otc.erp_receipt_status_transaction = 'being_processed'
+    where otc.erp_receipt_status_transaction in ('being_processed','exception_at_oic')
     and timestampdiff(minute,otc.erp_receipt_send_to_erp_at,current_timestamp()) >= p_interval_seconds;
+    
+    update conciliated_payed_receivable cpr
+    
+    set cpr.erp_receipt_sent_to_erp_at = null
+    ,cpr.erp_receipt_returned_from_erp_at = null
+    ,cpr.erp_receipt_status_transaction = 'waiting_to_be_process'
+    ,cpr.erp_receipt_log = null
+
+    where cpr.erp_receipt_status_transaction in ('being_processed','exception_at_oic')
+    and timestampdiff(minute,cpr.erp_receipt_sent_to_erp_at,current_timestamp()) >= p_interval_seconds;
     
     commit;
     

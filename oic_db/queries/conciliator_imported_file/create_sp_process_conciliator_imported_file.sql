@@ -1,6 +1,6 @@
 DROP PROCEDURE IF EXISTS sp_process_conciliator_imported_file; 
 DELIMITER //
-CREATE PROCEDURE sp_process_conciliator_imported_file ( )
+CREATE PROCEDURE sp_process_conciliator_imported_file ( in p_limit_transactions integer )
 	
 BEGIN
 
@@ -87,7 +87,9 @@ if get_lock(@v_keycontrol,1) = 1  then
 	and rec.converted_smartfin <> 'yes'
 
 	where cif.process_status = 'waiting_to_be_process'
-	and cif.conciliation_type = 'PCV'         
+	and cif.conciliation_type = 'PCV'
+    
+    limit p_limit_transactions
 
 	on duplicate key  update conciliated_payed_receivable.conciliator_id = conciliated_payed_receivable.conciliator_id;
 
@@ -186,7 +188,9 @@ if get_lock(@v_keycontrol,1) = 1  then
 
 	where cif.process_status = 'waiting_to_be_process'
 	and cif.conciliation_type = 'CHBK'         
-
+	
+    limit p_limit_transactions
+    
 	on duplicate key  update chargeback.conciliator_id = chargeback.conciliator_id;
 
 	update conciliator_imported_file 

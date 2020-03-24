@@ -1,0 +1,1 @@
+call sp_restart_status_otc(1);
