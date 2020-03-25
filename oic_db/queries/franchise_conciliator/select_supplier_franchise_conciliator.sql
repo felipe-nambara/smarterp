@@ -1,4 +1,4 @@
-select	
+select distinct
 		pay.erp_business_unit,
 		sup.id,
 		otc.origin_system,
@@ -43,6 +43,7 @@ and recg.origin_system = otc.origin_system
 and recg.operation = otc.operation
 and recg.transaction_type = rec.transaction_type
 and recg.erp_business_unit = otc.erp_business_unit
+and recg.converted_smartfin = rec.converted_smartfin
 and recg.memoline_setting = 'gross_value'
 
 left join receipt_from_to_version rftv
