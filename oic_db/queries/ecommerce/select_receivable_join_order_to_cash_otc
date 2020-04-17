@@ -1,0 +1,42 @@
+select
+	 otc.created_at -- data de criação do pedido no oic_db
+	,otc.erp_business_unit
+	,otc.erp_legal_entity
+    ,otc.front_id -- id do front
+    ,otc.erp_subsidiary
+    ,rec.nsu -- nsu
+    ,rec.authorization_code -- código de autorização
+    ,rec.credit_card_brand
+	,rec.contract_number
+    ,oftv.fiscal_federal_identification
+    ,ivcr.identification_financial_responsible -- cpf/cnpj do responsável financeiro
+    ,if(month(rec.billing_date)=month(current_date()),rec.billing_date,current_date()) as erp_trx_date
+    ,if(month(rec.billing_date)=month(current_date()),rec.billing_date,current_date()) as erp_gl_date   
+-- from invoice inv
+
+from receivable rec
+
+inner join order_to_cash otc
+on otc.id = rec.order_to_cash_id
+
+inner join invoice_customer ivcr
+on ivcr.order_to_cash_id = otc.id
+
+inner join organization_from_to_version oftv
+on oftv.erp_business_unit = otc.erp_business_unit
+and oftv.erp_legal_entity = otc.erp_legal_entity
+and oftv.erp_subsidiary = otc.erp_subsidiary
+and oftv.created_at = 	(
+							select
+								max(oftv_v2.created_at) as created_at
+							from organization_from_to_version oftv_v2
+                            where oftv_v2.erp_business_unit = oftv.erp_business_unit
+                            and oftv_v2.erp_legal_entity = oftv.erp_legal_entity
+                            and oftv_v2.erp_subsidiary = oftv.erp_subsidiary
+						)
+
+where otc.country = 'Brazil' -- Integração em paralelo por operação do país
+and otc.erp_subsidiary = 'BR050012' -- Filtro por filial (loop automático)
+and otc.origin_system = 'magento' -- Integração em paralelo por origem (SmartFit, BioRitmo, etc...)
+and otc.erp_invoice_status_transaction = 'waiting_to_be_process' -- Filtrar somente os registros que ainda não foram integrados com o erp e estão aguardando processamento
+-- and inv.erp_invoice_id is null -- Filtrar somente as invoices que ainda não foram integrados com o erp
